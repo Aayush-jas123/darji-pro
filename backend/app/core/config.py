@@ -1,6 +1,6 @@
 """Application configuration using Pydantic settings."""
 
-from typing import List
+from typing import Any, List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
