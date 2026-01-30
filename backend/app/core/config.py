@@ -44,16 +44,19 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    CORS_ORIGINS: Union[str, List[str]] = ["http://localhost:3000", "http://localhost:3001"]
     CORS_CREDENTIALS: bool = True
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v: str | List[str]) -> List[str]:
+    def parse_cors_origins(cls, v: Any) -> List[str]:
         """Parse CORS origins from comma-separated string or list."""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+            # Handle comma-separated string
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        elif isinstance(v, list):
+            return v
+        return ["*"]  # Fallback to allow all
 
     # Email Configuration
     EMAIL_PROVIDER: str = "smtp"
