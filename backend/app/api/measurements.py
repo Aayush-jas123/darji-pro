@@ -1,0 +1,317 @@
+"""Measurement management API routes."""
+
+from typing import Annotated, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.models.measurement import MeasurementProfile, MeasurementVersion, MeasurementStatus
+from app.schemas.measurement import (
+    MeasurementProfileCreate,
+    MeasurementProfileUpdate,
+    MeasurementProfileResponse,
+    MeasurementProfileWithVersionResponse,
+    MeasurementVersionCreate,
+    MeasurementVersionResponse,
+    MeasurementApproval,
+)
+from app.schemas.common import MessageResponse
+
+router = APIRouter()
+
+
+@router.post("", response_model=MeasurementProfileResponse, status_code=status.HTTP_201_CREATED)
+async def create_measurement_profile(
+    profile_data: MeasurementProfileCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Create a new measurement profile.
+    
+    - **profile_name**: Name for this measurement profile
+    - **measurements**: Detailed body measurements
+    """
+    # Create profile
+    new_profile = MeasurementProfile(
+        customer_id=current_user.id,
+        profile_name=profile_data.profile_name,
+        is_default=profile_data.is_default,
+        status=MeasurementStatus.DRAFT,
+        current_version=1,
+    )
+    
+    db.add(new_profile)
+    await db.flush()  # Get the profile ID
+    
+    # Create first version
+    new_version = MeasurementVersion(
+        profile_id=new_profile.id,
+        version_number=1,
+        **profile_data.measurements.model_dump(exclude_none=True),
+        measured_by_id=current_user.id,
+    )
+    
+    db.add(new_version)
+    await db.commit()
+    await db.refresh(new_profile)
+    
+    return new_profile
+
+
+@router.get("", response_model=list[MeasurementProfileResponse])
+async def list_measurement_profiles(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    customer_id: Optional[int] = None,
+):
+    """
+    List measurement profiles.
+    
+    - Customers see their own profiles
+    - Tailors/Admins can see all profiles or filter by customer_id
+    """
+    query = select(MeasurementProfile)
+    
+    # Filter based on user role
+    if current_user.is_customer:
+        query = query.where(MeasurementProfile.customer_id == current_user.id)
+    elif customer_id:
+        query = query.where(MeasurementProfile.customer_id == customer_id)
+    
+    query = query.order_by(MeasurementProfile.created_at.desc())
+    
+    result = await db.execute(query)
+    profiles = result.scalars().all()
+    
+    return profiles
+
+
+@router.get("/{profile_id}", response_model=MeasurementProfileWithVersionResponse)
+async def get_measurement_profile(
+    profile_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Get measurement profile with current version."""
+    result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    # Check permissions
+    if current_user.is_customer and profile.customer_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this profile",
+        )
+    
+    # Get current version
+    version_result = await db.execute(
+        select(MeasurementVersion).where(
+            MeasurementVersion.profile_id == profile_id,
+            MeasurementVersion.version_number == profile.current_version,
+        )
+    )
+    current_version = version_result.scalar_one_or_none()
+    
+    # Convert to response model
+    profile_dict = {
+        **profile.__dict__,
+        "current_measurements": current_version,
+    }
+    
+    return profile_dict
+
+
+@router.put("/{profile_id}", response_model=MeasurementProfileResponse)
+async def update_measurement_profile(
+    profile_id: int,
+    profile_update: MeasurementProfileUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Update measurement profile metadata."""
+    result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    # Check permissions
+    if current_user.is_customer and profile.customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    
+    # Update fields
+    if profile_update.profile_name is not None:
+        profile.profile_name = profile_update.profile_name
+    if profile_update.is_default is not None:
+        profile.is_default = profile_update.is_default
+    
+    await db.commit()
+    await db.refresh(profile)
+    return profile
+
+
+@router.post("/{profile_id}/versions", response_model=MeasurementVersionResponse)
+async def create_measurement_version(
+    profile_id: int,
+    version_data: MeasurementVersionCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Create a new version of measurements for a profile."""
+    result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    # Check permissions
+    if current_user.is_customer and profile.customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    
+    # Create new version
+    new_version_number = profile.current_version + 1
+    new_version = MeasurementVersion(
+        profile_id=profile_id,
+        version_number=new_version_number,
+        **version_data.model_dump(exclude_none=True),
+        measured_by_id=current_user.id,
+    )
+    
+    db.add(new_version)
+    
+    # Update profile
+    profile.current_version = new_version_number
+    profile.status = MeasurementStatus.PENDING_REVIEW
+    
+    await db.commit()
+    await db.refresh(new_version)
+    
+    return new_version
+
+
+@router.get("/{profile_id}/versions", response_model=list[MeasurementVersionResponse])
+async def list_measurement_versions(
+    profile_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """List all versions of a measurement profile."""
+    # Check profile exists and permissions
+    profile_result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = profile_result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    if current_user.is_customer and profile.customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    
+    # Get all versions
+    result = await db.execute(
+        select(MeasurementVersion)
+        .where(MeasurementVersion.profile_id == profile_id)
+        .order_by(MeasurementVersion.version_number.desc())
+    )
+    versions = result.scalars().all()
+    
+    return versions
+
+
+@router.post("/{profile_id}/approve", response_model=MeasurementProfileResponse)
+async def approve_measurement_profile(
+    profile_id: int,
+    approval_data: MeasurementApproval,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Approve or reject a measurement profile (Tailor/Admin only)."""
+    if not (current_user.is_tailor or current_user.is_admin or current_user.is_staff):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only tailors and admins can approve measurements",
+        )
+    
+    result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    # Update approval status
+    from datetime import datetime
+    
+    if approval_data.approved:
+        profile.status = MeasurementStatus.APPROVED
+        profile.approved_by_id = current_user.id
+        profile.approved_at = datetime.utcnow()
+        profile.rejection_reason = None
+    else:
+        profile.status = MeasurementStatus.REJECTED
+        profile.rejection_reason = approval_data.notes
+        profile.approved_by_id = None
+        profile.approved_at = None
+    
+    await db.commit()
+    await db.refresh(profile)
+    
+    return profile
+
+
+@router.delete("/{profile_id}", response_model=MessageResponse)
+async def delete_measurement_profile(
+    profile_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Delete a measurement profile."""
+    result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    # Check permissions
+    if current_user.is_customer and profile.customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    
+    await db.delete(profile)
+    await db.commit()
+    
+    return {"message": "Measurement profile deleted successfully"}
