@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
+// Required for static export
+export function generateStaticParams() {
+    return [];
+}
+
 interface Appointment {
     id: number;
     customer_id: number;
