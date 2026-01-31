@@ -141,6 +141,48 @@ else:
     except Exception as e:
         print(f"Error listing directories: {e}")
 
+@app.get("/debug-paths")
+def debug_paths():
+    """Diagnostic endpoint to inspect file system on Render"""
+    import os
+    current = Path.cwd()
+    
+    # helper to list dir safely
+    def list_dir(p):
+        try:
+            return [x.name for x in p.iterdir()]
+        except Exception as e:
+            return str(e)
+
+    structure = {
+        "cwd": str(current),
+        "files_in_cwd": list_dir(current),
+    }
+    
+    # Check levels up
+    try:
+        root = current.parent
+        structure["root"] = str(root)
+        structure["files_in_root"] = list_dir(root)
+        
+        frontend_root = root / "frontend"
+        structure["frontend_root_exists"] = frontend_root.exists()
+        if frontend_root.exists():
+            structure["files_in_frontend"] = list_dir(frontend_root)
+            
+            customer = frontend_root / "customer"
+            if customer.exists():
+                structure["files_in_customer"] = list_dir(customer)
+                
+                out = customer / "out"
+                structure["out_exists"] = out.exists()
+                if out.exists():
+                    structure["files_in_out"] = list_dir(out)
+    except Exception as e:
+        structure["error"] = str(e)
+        
+    return structure
+
 if __name__ == "__main__":
     import uvicorn
     
