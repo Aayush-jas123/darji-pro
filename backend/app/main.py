@@ -107,7 +107,7 @@ async def health_check():
 
 
 # Import and include routers
-from app.api import auth, users, appointments, measurements, branches, ml, admin
+from app.api import auth, users, appointments, measurements, branches, ml, admin, tailor
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
@@ -116,6 +116,7 @@ app.include_router(measurements.router, prefix="/api/measurements", tags=["Measu
 app.include_router(branches.router, prefix="/api/branches", tags=["Branches"])
 app.include_router(ml.router, prefix="/api/ml", tags=["ML & AI Recommendations"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(tailor.router, prefix="/api/tailor", tags=["Tailor"])
 
 
 # Serve frontend static files (must be last to not override API routes)
