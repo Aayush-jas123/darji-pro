@@ -1,6 +1,7 @@
 """Create database tables directly using SQLAlchemy (alternative to Alembic)."""
 
 import asyncio
+import ssl
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import settings
@@ -19,11 +20,20 @@ async def create_tables():
     print("🗄️  Creating database tables...")
     print(f"📊 Database: {settings.DATABASE_URL[:50]}...")
     
+    # Create SSL context for Neon
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    
     # Create async engine
     engine = create_async_engine(
-        settings.DATABASE_URL,
+        settings.DATABASE_URL.split('?')[0],  # Remove query params
         echo=True,
         pool_pre_ping=True,
+        connect_args={
+            "ssl": ssl_context,
+            "server_settings": {"jit": "off"}
+        }
     )
     
     try:
