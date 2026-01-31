@@ -1,12 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-  },
+  output: 'export',
+  distDir: 'out',
   images: {
-    domains: ['localhost'],
+    unoptimized: true,
   },
+  // Trailing slash for better static hosting
+  trailingSlash: true,
 }
 
 module.exports = nextConfig

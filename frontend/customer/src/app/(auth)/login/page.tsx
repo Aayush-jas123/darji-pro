@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +17,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const registered = searchParams.get('registered');
@@ -33,32 +33,14 @@ export default function LoginPage() {
 
     const onSubmit = async (data: LoginFormData) => {
         try {
-            // Check if backend expects form data or json. 
-            // The swagger says POST /api/auth/login/json takes JSON body {email, password}
-            // But usually OAuth2 uses form-urlencoded. Let's check Swagger if available or assume JSON for now as per previous summary.
-            // Oh, the swagger screenshot showed a Token endpoint, usually OAuth2 form request.
-            // But wait, user previously used /api/auth/login/json in curl? 
-            // Let's rely on JSON endpoint if available, but standard FastAPI auth uses form data.
-            // I'll try the JSON endpoint usually added for convenience.
-
-            // Wait, standard FastAPI security uses form-data. Let's try to send as x-www-form-urlencoded first if we encounter issues.
-            // Actually, let's check if there is a JSON login.
-            // Based on typical fastAPI setups, there might be /api/auth/login (form) and /api/auth/login/json.
-            // Let's assume there is a JSON endpoint or we'll fix it. I think I saw it in earlier messages.
-
-            // Let's look at previous messages...
-            // "Login: Find POST /api/auth/login/json" -> Yes! The model suggested this earlier.
-
             const response = await api.post('/api/auth/login/json', {
-                email: data.username, // typically mapped from username field
+                email: data.username,
                 password: data.password
             });
 
             const { access_token } = response.data;
             if (access_token) {
                 localStorage.setItem('token', access_token);
-                // Also store user info if available? Maybe fetch it.
-                // For now, redirect to dashboard or home.
                 router.push('/');
             }
         } catch (error: any) {
@@ -136,5 +118,13 @@ export default function LoginPage() {
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+            <LoginForm />
+        </Suspense>
     );
 }

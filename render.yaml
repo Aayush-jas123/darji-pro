@@ -1,43 +1,34 @@
 services:
-  # Backend API Service
+  # Backend API Service with Frontend
   - type: web
-    name: darji-pro-api
-    env: python
-    region: singapore
+    name: darji-pro-backend
+    runtime: python
     plan: free
-    branch: main
-    buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements-render.txt
+    buildCommand: |
+      cd backend && pip install -r requirements-render.txt &&
+      cd ../frontend/customer && npm install && npm run build
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.0
+        value: 3.12.8
       - key: DATABASE_URL
-        fromDatabase:
-          name: darji-pro-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
-        generateValue: true
-      - key: ALGORITHM
-        value: HS256
-      - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 30
-      - key: REFRESH_TOKEN_EXPIRE_DAYS
-        value: 7
-      - key: CORS_ORIGINS
-        value: https://darji-pro-customer.onrender.com,http://localhost:3000
-      - key: CORS_CREDENTIALS
-        value: true
-      - key: API_HOST
-        value: 0.0.0.0
-      - key: LOG_LEVEL
-        value: INFO
-      - key: REDIS_URL
-        value: redis://localhost:6379/0
-    healthCheckPath: /health
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
 
-databases:
-  - name: darji-pro-db
-    databaseName: darji_pro
-    user: darji_pro_user
+  # Frontend Static Site
+  - type: web
+    name: darji-pro-frontend
+    runtime: node
     plan: free
-    region: singapore
+    buildCommand: cd frontend/customer && npm install && npm run build
+    startCommand: cd frontend/customer && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 24.13.0
+      - key: NEXT_PUBLIC_API_URL
+        value: https://darji-pro-backend.onrender.com

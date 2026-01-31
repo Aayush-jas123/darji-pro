@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, Ruler, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-export default function DashboardPage() {
+function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const appointmentBooked = searchParams.get('appointment_booked');
@@ -107,5 +107,13 @@ export default function DashboardPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

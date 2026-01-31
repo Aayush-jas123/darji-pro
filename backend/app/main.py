@@ -93,6 +93,21 @@ app.include_router(branches.router, prefix="/api/branches", tags=["Branches"])
 app.include_router(ml.router, prefix="/api/ml", tags=["ML & AI Recommendations"])
 
 
+# Serve frontend static files (must be last to not override API routes)
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+import os
+
+frontend_path = Path(__file__).parent.parent.parent / "frontend" / "customer" / "out"
+
+# Only mount if the frontend build exists
+if frontend_path.exists() and frontend_path.is_dir():
+    print(f"📱 Serving frontend from: {frontend_path}")
+    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+else:
+    print(f"⚠️  Frontend not found at: {frontend_path}")
+    print("   Run 'cd frontend/customer && npm run build' to build the frontend")
+
 
 
 if __name__ == "__main__":
