@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Temporarily disabled static export due to dynamic routes
-  // output: 'export',
+  output: 'export',
   distDir: 'out',
   images: {
     unoptimized: true,
