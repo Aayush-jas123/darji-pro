@@ -136,10 +136,10 @@ async def get_tailor_appointments(
 @router.patch("/appointments/{appointment_id}/status")
 async def update_appointment_status(
     appointment_id: int,
-    status: str,
-    notes: Optional[str] = None,
     current_user: Annotated[User, Depends(get_tailor_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    status: str = Query(..., description="New status"),
+    notes: Optional[str] = Query(None, description="Optional notes"),
 ):
     """
     Update appointment status.
