@@ -63,12 +63,36 @@ if settings.ENVIRONMENT == "production":
 
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """Root endpoint. Serves frontend if available, else API info."""
+    # Check if we have a resolved frontend path from the startup logic
+    # We need to access the frontend_path variable computed below. 
+    # Since it's global scope in this module, we can access it if we move this function 
+    # OR we can re-compute/check it here. 
+    # Better: Use the same logic or just check the mount.
+    
+    # Actually, if we mount static files at "/", it should handle it.
+    # But since this specific route is defined, it takes precedence.
+    # So we should return the index.html explicitly.
+    
+    # Re-use the discovery logic or robustly find index.html
+    current = Path(__file__).parent.parent.resolve()
+    root = current.parent.resolve()
+    possible_paths = [
+        root / "frontend" / "customer" / "out" / "index.html",
+        Path("/opt/render/project/src/frontend/customer/out/index.html"),
+        current.parent / "frontend" / "customer" / "out" / "index.html",
+    ]
+    
+    for path in possible_paths:
+        if path.exists():
+            return FileResponse(path)
+
     return {
         "message": "Welcome to Darji Pro API",
         "version": settings.VERSION,
         "docs": "/docs",
-        "status": "operational"
+        "status": "operational",
+        "note": "Frontend not found. Run 'npm run build' in frontend directory."
     }
 
 
