@@ -10,13 +10,20 @@ import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
 
 const measurementSchema = z.object({
-    profile_name: z.string().min(1, 'Profile name is required (e.g. "My Wedding Suit")'),
-    height: z.coerce.number().min(1, 'Height is required'),
-    weight: z.coerce.number().min(1, 'Weight is required'),
-    // Add other measurements as needed, keeping it simple for now
+    profile_name: z.string().min(1, 'Profile name is required'),
+    // Measurements (mapped to backend schema)
     chest: z.coerce.number().optional(),
     waist: z.coerce.number().optional(),
-    hips: z.coerce.number().optional(),
+    hip: z.coerce.number().optional(),
+    neck: z.coerce.number().optional(),
+    shoulder: z.coerce.number().optional(),
+    arm_length: z.coerce.number().optional(),
+    inseam: z.coerce.number().optional(),
+
+    // Additional fields for display/context that might not map directly to main schema
+    // We'll put them in additional_measurements or ignore them if not in schema
+    height: z.coerce.number().optional(),
+    weight: z.coerce.number().optional(),
 });
 
 type MeasurementFormData = z.infer<typeof measurementSchema>;
@@ -34,10 +41,32 @@ export default function NewMeasurementPage() {
 
     const onSubmit = async (data: MeasurementFormData) => {
         try {
-            await api.post('/api/measurements', {
-                ...data,
-                unit: 'CM' // Default unit
-            });
+            // Construct the nested payload required by backend
+            const payload = {
+                profile_name: data.profile_name,
+                is_default: false,
+                measurements: {
+                    // Map form fields to measurement version fields
+                    chest: data.chest || undefined,
+                    waist: data.waist || undefined,
+                    hip: data.hip || undefined,
+                    neck: data.neck || undefined,
+                    shoulder: data.shoulder || undefined,
+                    arm_length: data.arm_length || undefined,
+                    inseam: data.inseam || undefined,
+
+                    // Default values for required/enum fields
+                    fit_preference: 'REGULAR',
+
+                    // Store extra data in additional_measurements
+                    additional_measurements: {
+                        height: data.height,
+                        weight: data.weight
+                    }
+                }
+            };
+
+            await api.post('/api/measurements', payload);
             router.push('/measurements');
         } catch (error: any) {
             console.error(error);
@@ -53,7 +82,7 @@ export default function NewMeasurementPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+            <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg">
                 <div className="mb-8">
                     <h1 className="text-3xl font-display font-bold text-gray-900">
                         New Measurement Profile
@@ -68,46 +97,71 @@ export default function NewMeasurementPage() {
                         label="Profile Name"
                         {...register('profile_name')}
                         error={errors.profile_name?.message}
-                        placeholder="e.g. Traditional Kurta Fit"
+                        placeholder="e.g. My Wedding Suit"
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Height (cm)"
-                            type="number"
-                            step="0.1"
-                            {...register('height')}
-                            error={errors.height?.message}
-                        />
-                        <Input
-                            label="Weight (kg)"
-                            type="number"
-                            step="0.1"
-                            {...register('weight')}
-                            error={errors.weight?.message}
-                        />
+                    <div className="border-t pt-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Info</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Input
+                                label="Height (cm)"
+                                type="number"
+                                step="0.1"
+                                {...register('height')}
+                            />
+                            <Input
+                                label="Weight (kg)"
+                                type="number"
+                                step="0.1"
+                                {...register('weight')}
+                            />
+                        </div>
                     </div>
 
-                    <div className="border-t pt-4 mt-4">
-                        <h3 className="font-medium text-gray-900 mb-4">Body Measurements (Optional)</h3>
-                        <div className="grid grid-cols-3 gap-4">
+                    <div className="border-t pt-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Body Measurements (cm)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <Input
-                                label="Chest (cm)"
+                                label="Neck"
+                                type="number"
+                                step="0.1"
+                                {...register('neck')}
+                            />
+                            <Input
+                                label="Shoulder Width"
+                                type="number"
+                                step="0.1"
+                                {...register('shoulder')}
+                            />
+                            <Input
+                                label="Chest"
                                 type="number"
                                 step="0.1"
                                 {...register('chest')}
                             />
                             <Input
-                                label="Waist (cm)"
+                                label="Waist"
                                 type="number"
                                 step="0.1"
                                 {...register('waist')}
                             />
                             <Input
-                                label="Hips (cm)"
+                                label="Hips"
                                 type="number"
                                 step="0.1"
-                                {...register('hips')}
+                                {...register('hip')}
+                            />
+                            <Input
+                                label="Arm Length"
+                                type="number"
+                                step="0.1"
+                                {...register('arm_length')}
+                            />
+                            <Input
+                                label="Inseam"
+                                type="number"
+                                step="0.1"
+                                {...register('inseam')}
                             />
                         </div>
                     </div>
@@ -118,7 +172,7 @@ export default function NewMeasurementPage() {
                         </div>
                     )}
 
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex gap-4 pt-6">
                         <Button
                             type="button"
                             variant="outline"
