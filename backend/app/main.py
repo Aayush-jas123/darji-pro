@@ -95,20 +95,51 @@ app.include_router(ml.router, prefix="/api/ml", tags=["ML & AI Recommendations"]
 
 # Serve frontend static files (must be last to not override API routes)
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pathlib import Path
 import os
 
-frontend_path = Path(__file__).parent.parent.parent / "frontend" / "customer" / "out"
+# Robust path resolution for Render
+# On Render, the build command runs in root, but backend runs in backend/
+# We need to find where the frontend files actually are.
+current_dir = Path(__file__).parent.parent.resolve()
+root_dir = current_dir.parent.resolve()
 
-# Only mount if the frontend build exists
-if frontend_path.exists() and frontend_path.is_dir():
-    print(f"📱 Serving frontend from: {frontend_path}")
+print(f"📂 Current Directory: {os.getcwd()}")
+print(f"📂 Resolved Root: {root_dir}")
+
+# Try multiple possible locations for the frontend build
+possible_paths = [
+    root_dir / "frontend" / "customer" / "out",                # Standard structure
+    Path("/opt/render/project/src/frontend/customer/out"),     # Absolute Render path
+    current_dir.parent / "frontend" / "customer" / "out",      # Relative parent
+]
+
+frontend_path = None
+for path in possible_paths:
+    if path.exists() and path.is_dir():
+        frontend_path = path
+        break
+
+if frontend_path:
+    print(f"✅ Frontend found at: {frontend_path}")
     app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
 else:
-    print(f"⚠️  Frontend not found at: {frontend_path}")
-    print("   Run 'cd frontend/customer && npm run build' to build the frontend")
-
-
+    print("❌ Frontend NOT found. Checked paths:")
+    for p in possible_paths:
+        print(f"   - {p} (Exists: {p.exists()})")
+    
+    # List directories to help debug
+    try:
+        print("📂 Directory listing of root:")
+        for item in os.listdir(root_dir):
+            print(f"  - {item}")
+        if (root_dir / "frontend").exists():
+            print("📂 Directory listing of frontend:")
+            for item in os.listdir(root_dir / "frontend"):
+                print(f"  - {item}")
+    except Exception as e:
+        print(f"Error listing directories: {e}")
 
 if __name__ == "__main__":
     import uvicorn
