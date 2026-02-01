@@ -38,8 +38,9 @@ class UserResponse(UserBase):
     """Schema for user response."""
     model_config = ConfigDict(from_attributes=True)
     
+from typing import Union
     id: int
-    role: UserRole
+    role: Union[UserRole, str]
     is_active: bool
     is_verified: bool
     is_priority: bool
