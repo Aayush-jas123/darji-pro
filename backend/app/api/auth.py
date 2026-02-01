@@ -69,7 +69,7 @@ async def register(
         phone=user_data.phone,
         full_name=user_data.full_name,
         hashed_password=get_password_hash(user_data.password),
-        role=user_data.role,
+        role=user_data.role.value if hasattr(user_data.role, 'value') else str(user_data.role),
     )
     
     db.add(new_user)
