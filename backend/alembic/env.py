@@ -22,6 +22,8 @@ from app.models.branch import Branch, TailorAvailability
 from app.models.appointment import Appointment
 from app.models.measurement import MeasurementProfile, MeasurementVersion
 from app.models.system import AuditLog, Notification
+from app.models.order import Order
+from app.models.invoice import Invoice
 
 # Alembic Config object
 config = context.config

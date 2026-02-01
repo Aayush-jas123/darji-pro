@@ -116,7 +116,12 @@ class Settings(BaseSettings):
     @property
     def database_url_sync(self) -> str:
         """Get synchronous database URL for Alembic."""
-        return self.DATABASE_URL.replace("+asyncpg", "")
+        # Remove +asyncpg and all query parameters for psycopg2
+        url = self.DATABASE_URL.replace("+asyncpg", "")
+        # Remove query parameters (everything after ?)
+        if "?" in url:
+            url = url.split("?")[0]
+        return url
 
 
 # Global settings instance
