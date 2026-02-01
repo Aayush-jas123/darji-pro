@@ -34,7 +34,7 @@ export default function RegisterPage() {
         try {
             await api.post('/api/auth/register', {
                 ...data,
-                role: 'CUSTOMER',
+                role: 'customer',
             });
             router.push('/login?registered=true');
         } catch (error: any) {
