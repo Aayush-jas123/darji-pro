@@ -1,7 +1,7 @@
 """User-related Pydantic schemas for request/response validation."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from app.models.user import UserRole
@@ -38,7 +38,6 @@ class UserResponse(UserBase):
     """Schema for user response."""
     model_config = ConfigDict(from_attributes=True)
     
-from typing import Union
     id: int
     role: Union[UserRole, str]
     is_active: bool
