@@ -9,8 +9,25 @@ async def setup_database():
     """Run the database setup SQL directly from the server."""
     
     sql_script = """
-    -- Create users table
-    CREATE TABLE IF NOT EXISTS users (
+    -- DROP EVERYTHING FIRST (Clean Slate)
+    DROP TABLE IF EXISTS invoices CASCADE;
+    DROP TABLE IF EXISTS orders CASCADE;
+    DROP TABLE IF EXISTS tailor_availability CASCADE;
+    DROP TABLE IF EXISTS appointments CASCADE;
+    DROP TABLE IF EXISTS measurement_versions CASCADE;
+    DROP TABLE IF EXISTS measurement_profiles CASCADE;
+    DROP TABLE IF EXISTS branches CASCADE;
+    DROP TABLE IF EXISTS users CASCADE;
+    
+    -- Drop ENUMs if they exist to avoid conflicts
+    DROP TYPE IF EXISTS userrole CASCADE;
+    DROP TYPE IF EXISTS appointmentstatus CASCADE;
+    DROP TYPE IF EXISTS orderstatus CASCADE;
+    DROP TYPE IF EXISTS invoicestatus CASCADE;
+    DROP TYPE IF EXISTS paymentmethod CASCADE;
+
+    -- Create users table (using VARCHAR for role to be safe)
+    CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         phone VARCHAR(20),
@@ -28,7 +45,7 @@ async def setup_database():
     );
 
     -- Create branches table
-    CREATE TABLE IF NOT EXISTS branches (
+    CREATE TABLE branches (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         address TEXT NOT NULL,
@@ -43,7 +60,7 @@ async def setup_database():
     );
 
     -- Create measurement_profiles table
-    CREATE TABLE IF NOT EXISTS measurement_profiles (
+    CREATE TABLE measurement_profiles (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         profile_name VARCHAR(255) NOT NULL,
@@ -53,7 +70,7 @@ async def setup_database():
     );
 
     -- Create measurement_versions table
-    CREATE TABLE IF NOT EXISTS measurement_versions (
+    CREATE TABLE measurement_versions (
         id SERIAL PRIMARY KEY,
         profile_id INTEGER REFERENCES measurement_profiles(id) ON DELETE CASCADE,
         version_number INTEGER NOT NULL,
@@ -73,7 +90,7 @@ async def setup_database():
     );
 
     -- Create appointments table
-    CREATE TABLE IF NOT EXISTS appointments (
+    CREATE TABLE appointments (
         id SERIAL PRIMARY KEY,
         customer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         tailor_id INTEGER REFERENCES users(id),
@@ -87,7 +104,7 @@ async def setup_database():
     );
 
     -- Create tailor_availability table
-    CREATE TABLE IF NOT EXISTS tailor_availability (
+    CREATE TABLE tailor_availability (
         id SERIAL PRIMARY KEY,
         tailor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         branch_id INTEGER REFERENCES branches(id) ON DELETE CASCADE,
@@ -98,7 +115,7 @@ async def setup_database():
     );
 
     -- Create orders table
-    CREATE TABLE IF NOT EXISTS orders (
+    CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
         appointment_id INTEGER REFERENCES appointments(id) ON DELETE CASCADE,
         customer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -117,7 +134,7 @@ async def setup_database():
     );
 
     -- Create invoices table
-    CREATE TABLE IF NOT EXISTS invoices (
+    CREATE TABLE invoices (
         id SERIAL PRIMARY KEY,
         order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
         customer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -139,13 +156,11 @@ async def setup_database():
 
     -- Insert admin user (password: admin123)
     INSERT INTO users (email, full_name, hashed_password, role, is_active, is_verified)
-    VALUES ('admin@darjipro.com', 'Admin User', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzS/ZWZw5u', 'admin', true, true)
-    ON CONFLICT (email) DO NOTHING;
+    VALUES ('admin@darjipro.com', 'Admin User', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzS/ZWZw5u', 'admin', true, true);
 
     -- Insert sample branch
     INSERT INTO branches (name, address, city, state, pincode, phone, email)
-    VALUES ('Main Branch', '123 Fashion Street', 'Mumbai', 'Maharashtra', '400001', '+91-9876543210', 'main@darjipro.com')
-    ON CONFLICT DO NOTHING;
+    VALUES ('Main Branch', '123 Fashion Street', 'Mumbai', 'Maharashtra', '400001', '+91-9876543210', 'main@darjipro.com');
     """
 
     try:
