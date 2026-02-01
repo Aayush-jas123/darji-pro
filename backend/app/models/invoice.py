@@ -51,15 +51,8 @@ class Invoice(Base):
     paid_amount: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     
     # Status
-    status: Mapped[InvoiceStatus] = mapped_column(
-        SQLEnum(InvoiceStatus),
-        nullable=False,
-        default=InvoiceStatus.DRAFT,
-        index=True
-    )
-    
-    # Payment Details
-    payment_method: Mapped[PaymentMethod] = mapped_column(SQLEnum(PaymentMethod), nullable=True)
+    status: Mapped[InvoiceStatus] = mapped_column(String(50), nullable=False, default=InvoiceStatus.DRAFT, index=True)
+    payment_method: Mapped[PaymentMethod] = mapped_column(String(50), nullable=True)
     payment_reference: Mapped[str] = mapped_column(String(255), nullable=True)
     payment_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     

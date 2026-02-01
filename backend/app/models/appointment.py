@@ -43,12 +43,7 @@ class Appointment(Base):
     
     # Appointment Details
     appointment_type: Mapped[AppointmentType] = mapped_column(String(50), nullable=False)
-    status: Mapped[AppointmentStatus] = mapped_column(
-        String(50), 
-        default=AppointmentStatus.PENDING, 
-        nullable=False,
-        index=True
-    )
+    status: Mapped[AppointmentStatus] = mapped_column(String(50), nullable=False, default=AppointmentStatus.PENDING, index=True)
     
     # Scheduling
     scheduled_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)

@@ -40,12 +40,7 @@ class Order(Base):
     design_notes: Mapped[str] = mapped_column(Text, nullable=True)
     
     # Status
-    status: Mapped[OrderStatus] = mapped_column(
-        SQLEnum(OrderStatus),
-        nullable=False,
-        default=OrderStatus.PENDING,
-        index=True
-    )
+    status: Mapped[OrderStatus] = mapped_column(String(50), nullable=False, default=OrderStatus.PENDING, index=True)
     
     # Pricing
     estimated_price: Mapped[float] = mapped_column(Float, nullable=True)
