@@ -1,0 +1,44 @@
+╔════════════════════════════════════════════════════════════════╗
+║                  DARJI PRO - QUICK SETUP GUIDE                 ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 RUN THESE 5 FILES IN ORDER:
+
+  1️⃣  chunk_1_enums.sql
+      → Creates ENUM types (5 types)
+      
+  2️⃣  chunk_2_users_branches.sql
+      → Creates users & branches tables
+      
+  3️⃣  chunk_3_measurements_appointments.sql
+      → Creates measurements & appointments tables
+      
+  4️⃣  chunk_4_orders_invoices.sql
+      → Creates orders & invoices tables
+      
+  5️⃣  chunk_5_sample_data.sql
+      → Inserts admin user & sample branch
+
+───────────────────────────────────────────────────────────────────
+
+🎯 WHERE TO RUN:
+   Neon SQL Editor → https://console.neon.tech
+
+📖 DETAILED INSTRUCTIONS:
+   See DATABASE_SETUP_CHECKLIST.md
+
+✅ AFTER COMPLETION:
+   Test registration at: https://darji-pro.onrender.com/register
+
+───────────────────────────────────────────────────────────────────
+
+⚡ QUICK STEPS:
+   1. Open Neon SQL Editor
+   2. Copy chunk_1_enums.sql → Paste → Run
+   3. Copy chunk_2_users_branches.sql → Paste → Run
+   4. Copy chunk_3_measurements_appointments.sql → Paste → Run
+   5. Copy chunk_4_orders_invoices.sql → Paste → Run
+   6. Copy chunk_5_sample_data.sql → Paste → Run
+   7. Done! 🎉
+
+───────────────────────────────────────────────────────────────────
