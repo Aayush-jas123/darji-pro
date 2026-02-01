@@ -36,6 +36,7 @@ class UserPasswordUpdate(BaseModel):
 
 class UserResponse(UserBase):
     """Schema for user response."""
+    # Config for ORM mode
     model_config = ConfigDict(from_attributes=True)
     
     id: int
