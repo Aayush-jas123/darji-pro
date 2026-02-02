@@ -170,9 +170,8 @@ async def setup_database():
     """
 
     # Inject the hash
-    sql_script = sql_script.format(admin_password_hash=admin_password_hash)
+        sql_script = sql_script.format(admin_password_hash=admin_password_hash)
 
-    try:
         async with engine.begin() as conn:
             # Split by statement to execute one by one
             statements = sql_script.split(";")
