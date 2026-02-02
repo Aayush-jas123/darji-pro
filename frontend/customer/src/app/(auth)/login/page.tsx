@@ -38,10 +38,18 @@ function LoginForm() {
                 password: data.password
             });
 
-            const { access_token } = response.data;
+            const { access_token, role } = response.data;
             if (access_token) {
                 localStorage.setItem('token', access_token);
-                router.push('/');
+
+                // Redirect based on role
+                if (role === 'admin') {
+                    router.push('/admin');
+                } else if (role === 'tailor') {
+                    router.push('/tailor');
+                } else {
+                    router.push('/dashboard');
+                }
             }
         } catch (error: any) {
             console.error(error);

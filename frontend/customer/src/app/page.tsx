@@ -29,12 +29,12 @@ export default function HomePage() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/book-appointment" className="btn-primary inline-flex items-center gap-2">
-                                Book Appointment
+                            <Link href="/login" className="btn-primary inline-flex items-center gap-2">
+                                Login as Customer
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
-                            <Link href="/measurements" className="btn-outline inline-flex items-center gap-2">
-                                Get Measured
+                            <Link href="/login?role=tailor" className="btn-outline inline-flex items-center gap-2">
+                                Login as Tailor
                                 <Ruler className="w-5 h-5" />
                             </Link>
                         </div>
