@@ -78,3 +78,11 @@ class TailorAvailabilityResponse(TailorAvailabilityBase):
     tailor_id: int
     branch_id: int
     is_active: bool
+
+
+class AvailabilitySetting(BaseModel):
+    """Schema for simplified availability setting."""
+    day_of_week: DayOfWeek
+    start_time: time
+    end_time: time
+    is_active: bool = True

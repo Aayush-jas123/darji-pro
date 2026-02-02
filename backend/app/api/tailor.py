@@ -228,3 +228,118 @@ async def get_appointment_measurements(
         }
     
     return profile
+
+
+@router.get("/availability")
+async def get_tailor_availability(
+    current_user: Annotated[User, Depends(get_tailor_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Get tailor's current availability schedule.
+    """
+    from app.models.branch import TailorAvailability, DayOfWeek
+    
+    # Get availability
+    result = await db.execute(
+        select(TailorAvailability)
+        .where(TailorAvailability.tailor_id == current_user.id)
+        .order_by(TailorAvailability.id) # Should ideally order by day, but enum sorting is tricky in SQL
+    )
+    availability = result.scalars().all()
+    
+    # Map to simplified schema
+    # Sort by day of week
+    day_order = {
+        DayOfWeek.MONDAY: 0, DayOfWeek.TUESDAY: 1, DayOfWeek.WEDNESDAY: 2,
+        DayOfWeek.THURSDAY: 3, DayOfWeek.FRIDAY: 4, DayOfWeek.SATURDAY: 5,
+        DayOfWeek.SUNDAY: 6
+    }
+    
+    availability = sorted(availability, key=lambda x: day_order.get(x.day_of_week, 7))
+    
+    return [
+        {
+            "day_of_week": a.day_of_week,
+            "start_time": a.start_time,
+            "end_time": a.end_time,
+            "is_active": a.is_active
+        }
+        for a in availability
+    ]
+
+
+@router.post("/availability")
+async def update_tailor_availability(
+    settings: list[dict], # Using dict to avoid circular imports, validated manually or via schema
+    current_user: Annotated[User, Depends(get_tailor_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Update tailor's availability schedule.
+    Expects a list of {day_of_week, start_time, end_time, is_active}.
+    """
+    from app.models.branch import TailorAvailability, DayOfWeek
+    
+    # Clear existing availability (simplest strategy for bulk update)
+    # Alternatively, update in place. Let's update in place or insert.
+    
+    # For now, we assume Branch ID 1 (Main Branch)
+    branch_id = 1
+    
+    for setting in settings:
+        day = setting.get('day_of_week')
+        if not day:
+            continue
+            
+        # Check if entry exists
+        result = await db.execute(
+            select(TailorAvailability).where(
+                and_(
+                    TailorAvailability.tailor_id == current_user.id,
+                    TailorAvailability.day_of_week == day
+                )
+            )
+        )
+        existing = result.scalar_one_or_none()
+        
+        # Parse times
+        try:
+            start_str = setting.get('start_time')
+            end_str = setting.get('end_time')
+            
+            # Simple string to time conversion if needed, or assume Pydantic handled it (if we used schema)
+            # Since we used dict, let's be safe.
+            from datetime import time
+            if isinstance(start_str, str):
+                h, m = map(int, start_str.split(':')[:2])
+                start_time = time(h, m)
+            else:
+                start_time = start_str
+                
+            if isinstance(end_str, str):
+                h, m = map(int, end_str.split(':')[:2])
+                end_time = time(h, m)
+            else:
+                end_time = end_str
+                
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid time format for {day}")
+            
+        if existing:
+            existing.start_time = start_time
+            existing.end_time = end_time
+            existing.is_active = setting.get('is_active', True)
+        else:
+            new_avail = TailorAvailability(
+                tailor_id=current_user.id,
+                branch_id=branch_id,
+                day_of_week=day,
+                start_time=start_time,
+                end_time=end_time,
+                is_active=setting.get('is_active', True)
+            )
+            db.add(new_avail)
+            
+    await db.commit()
+    return {"message": "Availability updated successfully"}
