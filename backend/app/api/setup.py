@@ -4,9 +4,14 @@ from app.core.database import engine
 
 router = APIRouter()
 
+from app.core.security import get_password_hash
+
 @router.get("/setup-database-emergency")
 async def setup_database():
     """Run the database setup SQL directly from the server."""
+    
+    # Generate hash dynamically to match current security config
+    admin_password_hash = get_password_hash("admin123")
     
     sql_script = """
     -- DROP EVERYTHING FIRST (Clean Slate)
@@ -156,12 +161,15 @@ async def setup_database():
 
     -- Insert admin user (password: admin123)
     INSERT INTO users (email, full_name, hashed_password, role, is_active, is_verified)
-    VALUES ('admin@darjipro.com', 'Admin User', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzS/ZWZw5u', 'admin', true, true);
+    VALUES ('admin@darjipro.com', 'Admin User', '{admin_password_hash}', 'admin', true, true);
 
     -- Insert sample branch
     INSERT INTO branches (name, address, city, state, pincode, phone, email)
     VALUES ('Main Branch', '123 Fashion Street', 'Mumbai', 'Maharashtra', '400001', '+91-9876543210', 'main@darjipro.com');
     """
+
+    # Inject the hash
+    sql_script = sql_script.format(admin_password_hash=admin_password_hash)
 
     try:
         async with engine.begin() as conn:
