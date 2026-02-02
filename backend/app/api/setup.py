@@ -10,10 +10,11 @@ from app.core.security import get_password_hash
 async def setup_database():
     """Run the database setup SQL directly from the server."""
     
-    # Generate hash dynamically to match current security config
-    admin_password_hash = get_password_hash("admin123")
-    
-    sql_script = """
+    try:
+        # Generate hash dynamically
+        admin_password_hash = get_password_hash("admin123")
+        
+        sql_script = """
     -- DROP EVERYTHING FIRST (Clean Slate)
     DROP TABLE IF EXISTS invoices CASCADE;
     DROP TABLE IF EXISTS orders CASCADE;
