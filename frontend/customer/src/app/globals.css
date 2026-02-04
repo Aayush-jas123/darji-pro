@@ -8,12 +8,19 @@
     --foreground: 222.2 84% 4.9%;
   }
 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 0 0% 100%;
+  }
+
   * {
-    @apply border-gray-200;
+    @apply border-gray-200 dark:border-gray-800;
+    /* Added dark border */
   }
 
   body {
-    @apply bg-white text-gray-950;
+    @apply bg-white text-gray-950 dark:bg-gray-950 dark:text-gray-50;
+    /* Added dark bg/text */
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
