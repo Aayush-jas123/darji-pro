@@ -167,10 +167,17 @@ async def update_order(
     if current_user.role == UserRole.TAILOR and order.tailor_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
+    # Track old status for notification
+    old_status = order.status
+    status_changed = False
+    
     # Update fields
     if order_update.status:
         try:
-            order.status = OrderStatus(order_update.status)
+            new_status = OrderStatus(order_update.status)
+            if new_status != old_status:
+                order.status = new_status
+                status_changed = True
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid status")
     
@@ -194,6 +201,27 @@ async def update_order(
     
     await db.commit()
     await db.refresh(order)
+    
+    # Send notification if status changed
+    if status_changed:
+        from app.services.notification import notification_service
+        try:
+            # Get customer user object
+            customer_result = await db.execute(select(User).where(User.id == order.customer_id))
+            customer = customer_result.scalar_one_or_none()
+            
+            if customer:
+                await notification_service.send_order_status_update(
+                    db=db,
+                    user=customer,
+                    order_id=order.id,
+                    order_number=order.order_number,
+                    old_status=old_status.value,
+                    new_status=order.status.value
+                )
+        except Exception as e:
+            # Log error but don't fail the order update
+            print(f"Failed to send order status notification: {e}")
     
     return order
 

@@ -78,6 +78,20 @@ async def create_appointment(
     await db.commit()
     await db.refresh(new_appointment)
     
+    # Send appointment confirmation notification
+    from app.services.notification import notification_service
+    try:
+        await notification_service.send_appointment_confirmation(
+            db=db,
+            user=current_user,
+            appointment_id=new_appointment.id,
+            appointment_time=new_appointment.scheduled_date,
+            service_type=new_appointment.appointment_type
+        )
+    except Exception as e:
+        # Log error but don't fail the appointment creation
+        print(f"Failed to send appointment notification: {e}")
+    
     return new_appointment
 
 
