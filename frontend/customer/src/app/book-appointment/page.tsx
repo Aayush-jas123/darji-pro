@@ -1,34 +1,23 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    MapPin, Ruler, Scissors, Shirt, CheckCircle, MessageCircle,
+    Calendar as CalendarIcon, User, ChevronRight, ChevronLeft, ArrowRight, Clock
+} from 'lucide-react';
 import api from '@/lib/api';
+import { StepIndicator } from '@/components/StepIndicator';
+import { BookingCalendar } from '@/components/BookingCalendar';
+import { TimeSlotSelector } from '@/components/TimeSlotSelector';
 
-const appointmentSchema = z.object({
-    appointment_time: z.string().min(1, 'Date and time is required'),
-    service_type: z.string().min(1, 'Service type is required'),
-    branch_id: z.coerce.number().min(1, 'Please select a branch'),
-    tailor_id: z.coerce.number().min(1, 'Please select a tailor'),
-    notes: z.string().optional(),
-});
-
-type AppointmentFormData = z.infer<typeof appointmentSchema>;
-
+// Types
 interface Branch {
     id: number;
     name: string;
     address: string;
-}
-
-interface TailorAvailability {
-    id: number;
-    tailor_name: string; // Assuming based on typical response
-    tailor_id: number;   // Need to verify this exists in response
+    city: string;
 }
 
 interface Tailor {
@@ -36,250 +25,432 @@ interface Tailor {
     name: string;
 }
 
+interface BookingState {
+    step: number;
+    branch: Branch | null;
+    service: string | null;
+    tailor: Tailor | null;
+    date: Date | null;
+    time: string | null;
+    notes: string;
+}
+
+const STEPS = [
+    { id: 1, label: 'Branch' },
+    { id: 2, label: 'Service' },
+    { id: 3, label: 'Date & Time' },
+    { id: 4, label: 'Confirm' }
+];
+
+const SERVICES = [
+    { id: 'NEW_SUIT', label: 'New Suit Consultation', icon: Shirt, desc: 'Full consultation for a bespoke suit' },
+    { id: 'MEASUREMENT', label: 'Measurement Session', icon: Ruler, desc: 'Get your precise measurements taken' },
+    { id: 'ALTERATION', label: 'Alteration', icon: Scissors, desc: 'Adjustments to existing garments' },
+    { id: 'FITTING', label: 'Fitting / Trial', icon: CheckCircle, desc: 'Try on your garment in progress' },
+    { id: 'CONSULTATION', label: 'General Consultation', icon: MessageCircle, desc: 'Discuss fabrics and styles' }
+];
+
 export default function BookAppointmentPage() {
     const router = useRouter();
+    const [loading, setLoading] = useState({
+        branches: true,
+        tailors: false,
+        submit: false
+    });
     const [branches, setBranches] = useState<Branch[]>([]);
     const [tailors, setTailors] = useState<Tailor[]>([]);
-    const [loadingBranches, setLoadingBranches] = useState(true);
 
-    // Watch branch selection to fetch tailors
-    const {
-        register,
-        handleSubmit,
-        watch,
-        setValue,
-        formState: { errors, isSubmitting },
-        setError,
-    } = useForm<AppointmentFormData>({
-        resolver: zodResolver(appointmentSchema),
+    const [state, setState] = useState<BookingState>({
+        step: 1,
+        branch: null,
+        service: null,
+        tailor: null,
+        date: null,
+        time: null,
+        notes: ''
     });
-
-    const selectedBranchId = watch('branch_id');
 
     useEffect(() => {
         fetchBranches();
     }, []);
 
     useEffect(() => {
-        if (selectedBranchId) {
-            fetchTailors(selectedBranchId);
-        } else {
-            setTailors([]);
+        if (state.branch) {
+            fetchTailors(state.branch.id);
         }
-    }, [selectedBranchId]);
+    }, [state.branch]);
 
     const fetchBranches = async () => {
         try {
             const response = await api.get('/api/branches');
             setBranches(response.data);
-            setLoadingBranches(false);
         } catch (error) {
             console.error('Failed to fetch branches', error);
-            // Don't block UI strictly, maybe user can retry
-            setLoadingBranches(false);
+        } finally {
+            setLoading(prev => ({ ...prev, branches: false }));
         }
     };
 
     const fetchTailors = async (branchId: number) => {
+        setLoading(prev => ({ ...prev, tailors: true }));
         try {
-            // Fetch availability to find tailors working at this branch
-            // Note: This relies on availability schedules existing. 
-            // If no schedules exist, no tailors will show.
-            // This is a limitation, but currently the only public endpoint to find branch tailors.
             const response = await api.get(`/api/branches/${branchId}/availability`);
 
-            // Extract unique tailors from availability slots
-            // Response is list[TailorAvailabilityBase] which has tailor_id but maybe not name?
-            // Wait, schema says TailorAvailabilityResponse. Let's assume it has tailor relation or we fetch user.
-            // Actually, without tailor name in response, we can't show names.
-            // For now, let's look at the response structure in browser verification or assume best effort.
-            // If we can't get names, we might show "Tailor #ID" which is bad.
-            // But let's assume the previous schema analysis was correct or we'll get IDs.
-            // ... Actually, `TailorAvailabilityResponse` usually has relationship if configured. 
-            // If not, we might be stuck. 
-            // Fallback: Just show an Input for Tailor ID if empty? No, bad UX.
-            // Let's assume there's at least one tailor and we might need to fetch them differently if this fails.
-
-            // NOTE: In a real scenario, I'd check the exact response.
-            // Start simple: map to a list.
+            // Extract unique tailors from availability
             const uniqueTailors = new Map<number, string>();
             response.data.forEach((slot: any) => {
-                // Assume 'tailor' object or 'tailor_id'
                 if (slot.tailor_id) {
-                    // Check if name is available, otherwise use ID
                     uniqueTailors.set(slot.tailor_id, slot.tailor_name || `Tailor #${slot.tailor_id}`);
                 }
             });
 
+            // If no tailors found from availability, try to fetch all staff for branch (fallback)
+            // This is a simplification. In real app we might have a dedicated endpoint.
             const tailorsList = Array.from(uniqueTailors.entries()).map(([id, name]) => ({ id, name }));
-
-            // If empty, maybe add a "General" option if backend allows?
-            if (tailorsList.length === 0) {
-                // This is risky. If no availability, user can't book?
-                // Let's mock one for testing if empty, or show message.
-                // console.warn("No tailors found");
-            }
             setTailors(tailorsList);
         } catch (error) {
             console.error('Failed to fetch tailors', error);
+        } finally {
+            setLoading(prev => ({ ...prev, tailors: false }));
         }
     };
 
-    const onSubmit = async (data: AppointmentFormData) => {
+    const handleNext = () => {
+        if (state.step < 4) {
+            setState(prev => ({ ...prev, step: prev.step + 1 }));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            handleSubmit();
+        }
+    };
+
+    const handleBack = () => {
+        if (state.step > 1) {
+            setState(prev => ({ ...prev, step: prev.step - 1 }));
+        } else {
+            router.back();
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!state.date || !state.time || !state.branch || !state.service || !state.tailor) return;
+
+        setLoading(prev => ({ ...prev, submit: true }));
         try {
-            const isoDate = new Date(data.appointment_time).toISOString();
+            // Combine date and time
+            const [hours, minutes] = state.time.split(':').map(Number);
+            const appointmentDate = new Date(state.date);
+            appointmentDate.setHours(hours, minutes, 0, 0);
+
+            // Shift to UTC for backend if needed, or send local ISO
+            // Backend expects ISO string. `state.date` from react-calendar is local 00:00:00 usually?
+            // appointmentDate is now correct local time. toISOString() converts to UTC.
+            const isoDate = appointmentDate.toISOString();
 
             await api.post('/api/appointments', {
-                ...data,
+                branch_id: state.branch.id,
+                tailor_id: state.tailor.id,
+                service_type: state.service,
                 appointment_time: isoDate,
-                scheduled_date: isoDate, // Backend uses scheduled_date
-                duration_minutes: 30, // Default duration
-                appointment_type: data.service_type, // Map service to type
+                scheduled_date: isoDate,
+                duration_minutes: 30, // Default to 30 mins
+                notes: state.notes,
                 status: 'PENDING'
             });
+
+            // Redirect on success
             router.push('/dashboard?appointment_booked=true');
         } catch (error: any) {
-            console.error(error);
+            console.error('Booking failed', error);
             if (error.response?.status === 401) {
                 router.push(`/login?redirect=/book-appointment`);
-                return;
+            } else {
+                alert(error.response?.data?.detail || 'Failed to book appointment. Please try again.');
             }
-            if (error.response?.status === 409) {
-                setError('root', { message: 'This time slot is already booked. Please choose another time.' });
-                return;
-            }
-            setError('root', {
-                message: error.response?.data?.detail || 'Booking failed. Please check details.',
-            });
+            setLoading(prev => ({ ...prev, submit: false }));
         }
     };
 
+    // Validation for Next button
+    const isStepValid = () => {
+        switch (state.step) {
+            case 1: return !!state.branch;
+            case 2: return !!state.service && !!state.tailor;
+            case 3: return !!state.date && !!state.time;
+            case 4: return true;
+            default: return false;
+        }
+    };
+
+    // Render Steps
+    const renderStep1 = () => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {branches.map((branch) => (
+                <div
+                    key={branch.id}
+                    onClick={() => setState(prev => ({ ...prev, branch }))}
+                    className={`
+                        cursor-pointer p-6 rounded-xl border-2 transition-all duration-200 relative overflow-hidden group
+                        ${state.branch?.id === branch.id
+                            ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-lg'
+                            : 'border-transparent bg-white dark:bg-gray-800 hover:border-blue-300 shadow-sm hover:shadow-md'
+                        }
+                    `}
+                >
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className={`
+                                p-3 rounded-lg flex items-center justify-center
+                                ${state.branch?.id === branch.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}
+                            `}>
+                                <MapPin className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white text-lg">{branch.name}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{branch.city}</p>
+                            </div>
+                        </div>
+                        {state.branch?.id === branch.id && (
+                            <div className="bg-blue-600 rounded-full p-1 animate-in zoom-in duration-200">
+                                <CheckCircle className="w-5 h-5 text-white" />
+                            </div>
+                        )}
+                    </div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400 text-sm">{branch.address}</p>
+                </div>
+            ))}
+            {loading.branches && (
+                [1, 2].map(i => (
+                    <div key={i} className="h-40 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse" />
+                ))
+            )}
+        </div>
+    );
+
+    const renderStep2 = () => (
+        <div className="space-y-8">
+            <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Scissors className="w-5 h-5 text-purple-600" /> Select Service
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {SERVICES.map((service) => (
+                        <div
+                            key={service.id}
+                            onClick={() => setState(prev => ({ ...prev, service: service.id }))}
+                            className={`
+                                cursor-pointer p-4 rounded-xl border-2 transition-all duration-200
+                                ${state.service === service.id
+                                    ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 shadow-md'
+                                    : 'border-transparent bg-white dark:bg-gray-800 hover:border-purple-300 shadow-sm'
+                                }
+                            `}
+                        >
+                            <div className="flex flex-col items-center text-center gap-3">
+                                <service.icon className={`w-8 h-8 ${state.service === service.id ? 'text-purple-600' : 'text-gray-400'}`} />
+                                <div>
+                                    <h4 className="font-bold text-gray-900 dark:text-white">{service.label}</h4>
+                                    <p className="text-xs text-gray-500 mt-1">{service.desc}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <User className="w-5 h-5 text-blue-600" /> Select Tailor
+                </h3>
+                {tailors.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {tailors.map((tailor) => (
+                            <div
+                                key={tailor.id}
+                                onClick={() => setState(prev => ({ ...prev, tailor }))}
+                                className={`
+                                    cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3
+                                    ${state.tailor?.id === tailor.id
+                                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                        : 'border-transparent bg-white dark:bg-gray-800 hover:border-blue-300 shadow-sm'
+                                    }
+                                `}
+                            >
+                                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                    <User className="w-6 h-6 text-gray-500" />
+                                </div>
+                                <span className="font-medium text-gray-900 dark:text-white">{tailor.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl text-yellow-800 dark:text-yellow-200 text-center">
+                        {loading.tailors ? 'Loading tailors...' : 'No tailors available for this branch. Please try another branch.'}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    const renderStep3 = () => (
+        <div className="flex flex-col md:flex-row gap-8">
+            <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-blue-600" /> Select Date
+                </h3>
+                <BookingCalendar
+                    selectedDate={state.date}
+                    onDateSelect={(date) => setState(prev => ({ ...prev, date, time: null }))}
+                />
+            </div>
+            <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-purple-600" /> Select Time
+                </h3>
+                {!state.date ? (
+                    <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                        <p className="text-gray-500 text-sm">Please select a date first</p>
+                    </div>
+                ) : (
+                    <TimeSlotSelector
+                        tailorId={state.tailor!.id}
+                        selectedTime={state.time}
+                        onTimeSelect={(time) => setState(prev => ({ ...prev, time }))}
+                    />
+                )}
+            </div>
+        </div>
+    );
+
+    const renderStep4 = () => (
+        <div className="max-w-xl mx-auto space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">Booking Summary</h3>
+
+                <div className="space-y-4">
+                    <SummaryItem
+                        icon={MapPin} label="Branch"
+                        value={state.branch?.name}
+                        subValue={state.branch?.address}
+                        onEdit={() => setState(prev => ({ ...prev, step: 1 }))}
+                    />
+                    <SummaryItem
+                        icon={Scissors} label="Service"
+                        value={SERVICES.find(s => s.id === state.service)?.label}
+                        onEdit={() => setState(prev => ({ ...prev, step: 2 }))}
+                    />
+                    <SummaryItem
+                        icon={User} label="Tailor"
+                        value={state.tailor?.name}
+                        onEdit={() => setState(prev => ({ ...prev, step: 2 }))}
+                    />
+                    <SummaryItem
+                        icon={CalendarIcon} label="Date & Time"
+                        value={state.date?.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        subValue={state.time ? `${state.time}` : ''}
+                        onEdit={() => setState(prev => ({ ...prev, step: 3 }))}
+                    />
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Notes (Optional)
+                    </label>
+                    <textarea
+                        value={state.notes}
+                        onChange={(e) => setState(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Any specific instructions or preferences..."
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none transition-shadow"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-display font-bold text-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+                <div className="mb-10 text-center">
+                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
                         Book Appointment
                     </h1>
-                    <p className="mt-2 text-gray-600">
-                        Schedule a fitting session with our expert tailors
+                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                        Schedule a session with our expert tailors in just a few simple steps.
                     </p>
                 </div>
 
-                <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                    <div className="space-y-4">
-                        <div className="w-full">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Branch
-                            </label>
-                            <select
-                                {...register('branch_id')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                                disabled={loadingBranches}
-                            >
-                                <option value="">Select a branch...</option>
-                                {branches.map(branch => (
-                                    <option key={branch.id} value={branch.id}>
-                                        {branch.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.branch_id && (
-                                <p className="mt-1 text-sm text-red-500">{errors.branch_id.message}</p>
-                            )}
-                        </div>
+                <StepIndicator steps={STEPS} currentStep={state.step} />
 
-                        <div className="w-full">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Tailor
-                            </label>
-                            <select
-                                {...register('tailor_id')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                                disabled={!selectedBranchId || tailors.length === 0}
-                            >
-                                <option value="">Select a tailor...</option>
-                                {tailors.map(tailor => (
-                                    <option key={tailor.id} value={tailor.id}>
-                                        {tailor.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {tailors.length === 0 && selectedBranchId && (
-                                <p className="text-xs text-amber-600 mt-1">No available tailors found for this branch. Please contact support.</p>
-                            )}
-                            {errors.tailor_id && (
-                                <p className="mt-1 text-sm text-red-500">{errors.tailor_id.message}</p>
-                            )}
-                        </div>
-
-                        <div className="w-full">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Service Type
-                            </label>
-                            <select
-                                {...register('service_type')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                            >
-                                <option value="">Select a service...</option>
-                                <option value="NEW_SUIT">New Suit Consultation</option>
-                                <option value="MEASUREMENT">Measurement Session</option>
-                                <option value="alterations">Alteration</option>
-                                {/* Note: Backend enum usually Uppercase, e.g. ALTERATION. Checking schema might need enum match. 
-                                    Let's generic string or try match. "ALTERATION" is safer.
-                                */}
-                                <option value="FITTING">Fitting / Trial</option>
-                                <option value="CONSULTATION">General Consultation</option>
-                            </select>
-                            {errors.service_type && (
-                                <p className="mt-1 text-sm text-red-500">{errors.service_type.message}</p>
-                            )}
-                        </div>
-
-                        <Input
-                            label="Date & Time"
-                            type="datetime-local"
-                            {...register('appointment_time')}
-                            error={errors.appointment_time?.message}
-                        />
-
-                        <div className="w-full">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Notes (Optional)
-                            </label>
-                            <textarea
-                                {...register('notes')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none h-32 resize-none"
-                                placeholder="Any specific requirements or preferences..."
-                            />
-                        </div>
-                    </div>
-
-                    {errors.root && (
-                        <div className="text-red-500 text-sm text-center">
-                            {errors.root.message}
-                        </div>
-                    )}
-
-                    <div className="flex gap-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => router.back()}
+                <div className="mt-8 mb-12">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={state.step}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
                         >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            isLoading={isSubmitting}
-                        >
-                            Confirm Booking
-                        </Button>
-                    </div>
-                </form>
+                            {state.step === 1 && renderStep1()}
+                            {state.step === 2 && renderStep2()}
+                            {state.step === 3 && renderStep3()}
+                            {state.step === 4 && renderStep4()}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
+                <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-800">
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                        {state.step === 1 ? 'Cancel' : 'Back'}
+                    </button>
+
+                    <button
+                        onClick={handleNext}
+                        disabled={!isStepValid() || loading.submit}
+                        className={`
+                            flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all transform
+                            ${isStepValid() && !loading.submit
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-xl hover:scale-105 active:scale-95'
+                                : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-70'}
+                        `}
+                    >
+                        {loading.submit ? (
+                            <span className="flex items-center gap-2">Processing...</span>
+                        ) : state.step === 4 ? (
+                            <>Confirm Booking <CheckCircle className="w-5 h-5" /></>
+                        ) : (
+                            <>Next Step <ChevronRight className="w-5 h-5" /></>
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );
 }
+
+// Helper Component for Summary
+const SummaryItem = ({ icon: Icon, label, value, subValue, onEdit }: any) => (
+    <div className="flex items-start justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg group">
+        <div className="flex items-center gap-4">
+            <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <Icon className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{value}</p>
+                {subValue && <p className="text-sm text-gray-500 mt-0.5">{subValue}</p>}
+            </div>
+        </div>
+        <button
+            onClick={onEdit}
+            className="text-gray-400 group-hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+        >
+            <span className="text-sm font-medium">Edit</span>
+        </button>
+    </div>
+);
+
+
