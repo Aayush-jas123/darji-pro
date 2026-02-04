@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
     users: {
@@ -67,128 +69,258 @@ export default function AdminAnalytics() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading analytics...</p>
+                </div>
             </div>
         );
     }
 
+    // Prepare data for charts
     const userRoleData = stats ? [
-        { name: 'Customers', value: stats.users.by_role.customer, color: 'bg-green-500' },
-        { name: 'Tailors', value: stats.users.by_role.tailor, color: 'bg-purple-500' },
-        { name: 'Staff', value: stats.users.by_role.staff, color: 'bg-blue-500' },
-        { name: 'Admins', value: stats.users.by_role.admin, color: 'bg-red-500' },
+        { name: 'Customers', value: stats.users.by_role.customer, fill: '#10b981' },
+        { name: 'Tailors', value: stats.users.by_role.tailor, fill: '#8b5cf6' },
+        { name: 'Staff', value: stats.users.by_role.staff, fill: '#3b82f6' },
+        { name: 'Admins', value: stats.users.by_role.admin, fill: '#ef4444' },
     ] : [];
 
     const appointmentStatusData = stats ? [
-        { name: 'Pending', value: stats.appointments.by_status.pending, color: 'bg-yellow-500' },
-        { name: 'Confirmed', value: stats.appointments.by_status.confirmed, color: 'bg-blue-500' },
-        { name: 'In Progress', value: stats.appointments.by_status.in_progress, color: 'bg-purple-500' },
-        { name: 'Completed', value: stats.appointments.by_status.completed, color: 'bg-green-500' },
-        { name: 'Cancelled', value: stats.appointments.by_status.cancelled, color: 'bg-red-500' },
+        { name: 'Pending', value: stats.appointments.by_status.pending, fill: '#eab308' },
+        { name: 'Confirmed', value: stats.appointments.by_status.confirmed, fill: '#3b82f6' },
+        { name: 'In Progress', value: stats.appointments.by_status.in_progress, fill: '#8b5cf6' },
+        { name: 'Completed', value: stats.appointments.by_status.completed, fill: '#10b981' },
+        { name: 'Cancelled', value: stats.appointments.by_status.cancelled, fill: '#ef4444' },
     ] : [];
 
-    const maxUserValue = Math.max(...userRoleData.map(d => d.value), 1);
-    const maxAppointmentValue = Math.max(...appointmentStatusData.map(d => d.value), 1);
+    // Mock trend data (in real app, this would come from API)
+    const trendData = [
+        { month: 'Jan', appointments: 45, revenue: 12000 },
+        { month: 'Feb', appointments: 52, revenue: 15000 },
+        { month: 'Mar', appointments: 61, revenue: 18000 },
+        { month: 'Apr', appointments: 58, revenue: 16500 },
+        { month: 'May', appointments: 70, revenue: 21000 },
+        { month: 'Jun', appointments: 85, revenue: 25500 },
+    ];
+
+    const completionRate = stats?.appointments.total
+        ? Math.round((stats.appointments.by_status.completed / stats.appointments.total) * 100)
+        : 0;
+
+    const customerToTailorRatio = stats?.users.by_role.tailor
+        ? Math.round(stats.users.by_role.customer / stats.users.by_role.tailor)
+        : 0;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Header */}
-            <header className="bg-white shadow">
+            <header className="bg-white dark:bg-gray-800 shadow sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold text-gray-900">Analytics & Reports</h1>
-                        <button
-                            onClick={() => router.push('/admin')}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                        >
-                            ← Back to Dashboard
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => router.push('/admin')}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                            </button>
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics & Reports</h1>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Comprehensive business insights and metrics
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Overview Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-2">Total Users</h2>
-                        <p className="text-4xl font-bold text-blue-600">{stats?.users.total || 0}</p>
-                        <p className="text-sm text-gray-600 mt-1">{stats?.users.active || 0} active users</p>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-2">Total Appointments</h2>
-                        <p className="text-4xl font-bold text-purple-600">{stats?.appointments.total || 0}</p>
-                        <p className="text-sm text-gray-600 mt-1">
-                            {stats?.appointments.by_status.completed || 0} completed
-                        </p>
-                    </div>
-                </div>
-
-                {/* User Distribution Chart */}
-                <div className="bg-white rounded-lg shadow p-6 mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">User Distribution by Role</h2>
-                    <div className="space-y-4">
-                        {userRoleData.map((item) => (
-                            <div key={item.name}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                                    <span className="text-sm font-bold text-gray-900">{item.value}</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-4">
-                                    <div
-                                        className={`${item.color} h-4 rounded-full transition-all duration-500`}
-                                        style={{ width: `${(item.value / maxUserValue) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Appointment Status Chart */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Appointment Status Distribution</h2>
-                    <div className="space-y-4">
-                        {appointmentStatusData.map((item) => (
-                            <div key={item.name}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                                    <span className="text-sm font-bold text-gray-900">{item.value}</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-4">
-                                    <div
-                                        className={`${item.color} h-4 rounded-full transition-all duration-500`}
-                                        style={{ width: `${(item.value / maxAppointmentValue) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
                 {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow p-6 text-white">
-                        <h3 className="text-sm font-medium opacity-90 mb-2">Completion Rate</h3>
-                        <p className="text-3xl font-bold">
-                            {stats?.appointments.total
-                                ? Math.round((stats.appointments.by_status.completed / stats.appointments.total) * 100)
-                                : 0}%
-                        </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <Users className="w-8 h-8 opacity-80" />
+                            <TrendingUp className="w-5 h-5 opacity-60" />
+                        </div>
+                        <h3 className="text-sm font-medium opacity-90 mb-1">Total Users</h3>
+                        <p className="text-4xl font-bold">{stats?.users.total || 0}</p>
+                        <p className="text-sm opacity-80 mt-2">{stats?.users.active || 0} active</p>
                     </div>
-                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow p-6 text-white">
-                        <h3 className="text-sm font-medium opacity-90 mb-2">Pending Appointments</h3>
-                        <p className="text-3xl font-bold">{stats?.appointments.by_status.pending || 0}</p>
+
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <Calendar className="w-8 h-8 opacity-80" />
+                            <TrendingUp className="w-5 h-5 opacity-60" />
+                        </div>
+                        <h3 className="text-sm font-medium opacity-90 mb-1">Appointments</h3>
+                        <p className="text-4xl font-bold">{stats?.appointments.total || 0}</p>
+                        <p className="text-sm opacity-80 mt-2">{completionRate}% completion</p>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
-                        <h3 className="text-sm font-medium opacity-90 mb-2">Customer to Tailor Ratio</h3>
-                        <p className="text-3xl font-bold">
-                            {stats?.users.by_role.tailor
-                                ? Math.round(stats.users.by_role.customer / stats.users.by_role.tailor)
-                                : 0}:1
-                        </p>
+
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <DollarSign className="w-8 h-8 opacity-80" />
+                            <TrendingUp className="w-5 h-5 opacity-60" />
+                        </div>
+                        <h3 className="text-sm font-medium opacity-90 mb-1">Completion Rate</h3>
+                        <p className="text-4xl font-bold">{completionRate}%</p>
+                        <p className="text-sm opacity-80 mt-2">{stats?.appointments.by_status.completed || 0} completed</p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <Users className="w-8 h-8 opacity-80" />
+                            <TrendingUp className="w-5 h-5 opacity-60" />
+                        </div>
+                        <h3 className="text-sm font-medium opacity-90 mb-1">Customer/Tailor</h3>
+                        <p className="text-4xl font-bold">{customerToTailorRatio}:1</p>
+                        <p className="text-sm opacity-80 mt-2">ratio</p>
+                    </div>
+                </div>
+
+                {/* Charts Row 1 */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Appointment Trend */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Appointment Trends</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <LineChart data={trendData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                                <XAxis dataKey="month" stroke="#6b7280" />
+                                <YAxis stroke="#6b7280" />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#1f2937',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        color: '#fff'
+                                    }}
+                                />
+                                <Legend />
+                                <Line
+                                    type="monotone"
+                                    dataKey="appointments"
+                                    stroke="#8b5cf6"
+                                    strokeWidth={3}
+                                    dot={{ fill: '#8b5cf6', r: 5 }}
+                                    activeDot={{ r: 7 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* User Distribution Pie */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">User Distribution</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={userRoleData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {userRoleData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#1f2937',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        color: '#fff'
+                                    }}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Charts Row 2 */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Appointment Status Bar Chart */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Appointment Status</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={appointmentStatusData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                                <XAxis dataKey="name" stroke="#6b7280" />
+                                <YAxis stroke="#6b7280" />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#1f2937',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        color: '#fff'
+                                    }}
+                                />
+                                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                                    {appointmentStatusData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* Revenue Trend (Mock Data) */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Revenue Trend</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <LineChart data={trendData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                                <XAxis dataKey="month" stroke="#6b7280" />
+                                <YAxis stroke="#6b7280" />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#1f2937',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        color: '#fff'
+                                    }}
+                                />
+                                <Legend />
+                                <Line
+                                    type="monotone"
+                                    dataKey="revenue"
+                                    stroke="#10b981"
+                                    strokeWidth={3}
+                                    dot={{ fill: '#10b981', r: 5 }}
+                                    activeDot={{ r: 7 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Summary Statistics</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats?.users.by_role.customer || 0}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Customers</p>
+                        </div>
+                        <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats?.users.by_role.tailor || 0}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Tailors</p>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats?.appointments.by_status.completed || 0}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Completed</p>
+                        </div>
+                        <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                            <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats?.appointments.by_status.pending || 0}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Pending</p>
+                        </div>
                     </div>
                 </div>
             </main>
