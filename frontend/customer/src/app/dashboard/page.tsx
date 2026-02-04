@@ -128,47 +128,53 @@ function DashboardContent() {
 
                 {/* Stats / Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-                        <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <Calendar className="w-6 h-6" />
+                    <Link href="/appointments" className="block group">
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-transform duration-300 hover:scale-[1.02] cursor-pointer">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                        <Calendar className="w-6 h-6" />
+                                    </div>
+                                    <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">Upcoming</span>
                                 </div>
-                                <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">Upcoming</span>
+                                <h3 className="text-3xl font-bold mb-1">{appointments.filter(a => a.status !== 'COMPLETED').length}</h3>
+                                <p className="text-blue-100 text-sm">Active Appointments</p>
                             </div>
-                            <h3 className="text-3xl font-bold mb-1">{appointments.filter(a => a.status !== 'COMPLETED').length}</h3>
-                            <p className="text-blue-100 text-sm">Active Appointments</p>
                         </div>
-                    </div>
+                    </Link>
 
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-                        <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <Ruler className="w-6 h-6" />
+                    <Link href="/measurements" className="block group">
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-transform duration-300 hover:scale-[1.02] cursor-pointer">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                        <Ruler className="w-6 h-6" />
+                                    </div>
+                                    <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">Profile</span>
                                 </div>
-                                <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">Profile</span>
+                                <h3 className="text-3xl font-bold mb-1">Complete</h3>
+                                <p className="text-purple-100 text-sm">Measurement Status</p>
                             </div>
-                            <h3 className="text-3xl font-bold mb-1">Complete</h3>
-                            <p className="text-purple-100 text-sm">Measurement Status</p>
                         </div>
-                    </div>
+                    </Link>
 
-                    <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-                        <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <ShoppingBag className="w-6 h-6" />
+                    <Link href="/orders" className="block group">
+                        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-transform duration-300 hover:scale-[1.02] cursor-pointer">
+                            <div className="absolute right-0 top-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                        <ShoppingBag className="w-6 h-6" />
+                                    </div>
+                                    <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">Orders</span>
                                 </div>
-                                <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">Orders</span>
+                                <h3 className="text-3xl font-bold mb-1">0</h3>
+                                <p className="text-indigo-100 text-sm">Active Orders</p>
                             </div>
-                            <h3 className="text-3xl font-bold mb-1">0</h3>
-                            <p className="text-indigo-100 text-sm">Active Orders</p>
                         </div>
-                    </div>
+                    </Link>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-8">
