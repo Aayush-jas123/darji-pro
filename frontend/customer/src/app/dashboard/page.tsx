@@ -5,12 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, Ruler, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { NotificationBell } from '@/components/NotificationBell';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
 function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const appointmentBooked = searchParams.get('appointment_booked');
     const [user, setUser] = useState<any>(null);
+    const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
 
     useEffect(() => {
         // Check auth on client side
@@ -35,6 +38,13 @@ function DashboardContent() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-display font-bold text-primary-600">Darji Pro</h1>
                     <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <NotificationBell onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)} />
+                            <NotificationDropdown
+                                isOpen={notificationDropdownOpen}
+                                onClose={() => setNotificationDropdownOpen(false)}
+                            />
+                        </div>
                         <Button variant="outline" onClick={handleLogout} className="text-sm py-2 px-4">
                             <LogOut className="w-4 h-4 mr-2" />
                             Sign Out
