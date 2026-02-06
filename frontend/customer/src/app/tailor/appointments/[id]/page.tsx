@@ -16,6 +16,11 @@ import {
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
 
+// Required for static export with dynamic routes
+export function generateStaticParams() {
+    return [];
+}
+
 export default function AppointmentDetail() {
     const router = useRouter();
     const params = useParams();
