@@ -16,6 +16,11 @@ import {
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
 
+// Generate empty params for static export - actual data fetched client-side
+export function generateStaticParams() {
+    return [];
+}
+
 export default function AppointmentDetail() {
     const router = useRouter();
     const params = useParams();
