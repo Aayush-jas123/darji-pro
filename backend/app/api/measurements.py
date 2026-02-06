@@ -289,6 +289,125 @@ async def approve_measurement_profile(
     return profile
 
 
+@router.get("/{profile_id}/export-pdf")
+async def export_measurement_pdf(
+    profile_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Export measurement profile as PDF.
+    
+    Returns a professionally formatted PDF document with all measurements.
+    """
+    from fastapi.responses import StreamingResponse
+    from app.services.pdf_service import pdf_service
+    
+    # Get profile
+    result = await db.execute(
+        select(MeasurementProfile).where(MeasurementProfile.id == profile_id)
+    )
+    profile = result.scalar_one_or_none()
+    
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Measurement profile not found",
+        )
+    
+    # Check permissions
+    if current_user.is_customer and profile.customer_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to export this profile",
+        )
+    
+    # Get current version
+    version_result = await db.execute(
+        select(MeasurementVersion).where(
+            MeasurementVersion.profile_id == profile_id,
+            MeasurementVersion.version_number == profile.current_version,
+        )
+    )
+    current_version = version_result.scalar_one_or_none()
+    
+    if not current_version:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No measurements found for this profile",
+        )
+    
+    # Get customer info
+    customer_result = await db.execute(
+        select(User).where(User.id == profile.customer_id)
+    )
+    customer = customer_result.scalar_one_or_none()
+    
+    # Get measured by info
+    measured_by_name = None
+    if current_version.measured_by_id:
+        measured_by_result = await db.execute(
+            select(User).where(User.id == current_version.measured_by_id)
+        )
+        measured_by = measured_by_result.scalar_one_or_none()
+        if measured_by:
+            measured_by_name = measured_by.full_name
+    
+    # Prepare measurements dict
+    measurements = {
+        'neck': current_version.neck,
+        'shoulder': current_version.shoulder,
+        'chest': current_version.chest,
+        'waist': current_version.waist,
+        'hip': current_version.hip,
+        'arm_length': current_version.arm_length,
+        'sleeve_length': current_version.sleeve_length,
+        'bicep': current_version.bicep,
+        'wrist': current_version.wrist,
+        'inseam': current_version.inseam,
+        'outseam': current_version.outseam,
+        'thigh': current_version.thigh,
+        'knee': current_version.knee,
+        'calf': current_version.calf,
+        'ankle': current_version.ankle,
+        'back_length': current_version.back_length,
+        'front_length': current_version.front_length,
+    }
+    
+    # Combine notes
+    notes_parts = []
+    if current_version.posture_notes:
+        notes_parts.append(f"Posture Notes: {current_version.posture_notes}")
+    if current_version.special_requirements:
+        notes_parts.append(f"Special Requirements: {current_version.special_requirements}")
+    if current_version.change_notes:
+        notes_parts.append(f"Changes: {current_version.change_notes}")
+    
+    notes = "\n".join(notes_parts) if notes_parts else None
+    
+    # Generate PDF
+    pdf_buffer = pdf_service.generate_measurement_pdf(
+        customer_name=customer.full_name if customer else "Unknown Customer",
+        profile_name=profile.profile_name,
+        measurements=measurements,
+        fit_preference=current_version.fit_preference,
+        measured_by=measured_by_name,
+        measurement_date=current_version.created_at,
+        notes=notes
+    )
+    
+    # Return PDF as download
+    filename = f"measurement_{profile.profile_name.replace(' ', '_')}_{profile_id}.pdf"
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
 @router.delete("/{profile_id}", response_model=MessageResponse)
 async def delete_measurement_profile(
     profile_id: int,

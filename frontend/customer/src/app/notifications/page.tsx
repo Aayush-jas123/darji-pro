@@ -173,8 +173,8 @@ export default function NotificationsPage() {
                             <button
                                 onClick={() => setFilter('all')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'all'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                             >
                                 All
@@ -182,8 +182,8 @@ export default function NotificationsPage() {
                             <button
                                 onClick={() => setFilter('unread')}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'unread'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                             >
                                 Unread ({unreadCount})
@@ -193,8 +193,8 @@ export default function NotificationsPage() {
                             <button
                                 onClick={() => setChannelFilter('all')}
                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${channelFilter === 'all'
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                             >
                                 All Channels
@@ -202,8 +202,8 @@ export default function NotificationsPage() {
                             <button
                                 onClick={() => setChannelFilter('email')}
                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${channelFilter === 'email'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                             >
                                 Email
@@ -211,8 +211,8 @@ export default function NotificationsPage() {
                             <button
                                 onClick={() => setChannelFilter('in_app')}
                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${channelFilter === 'in_app'
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                             >
                                 In-App

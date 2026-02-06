@@ -185,8 +185,8 @@ export default function FabricCatalog() {
                                 <button
                                     onClick={() => setTypeFilter('All')}
                                     className={`px-4 py-2 rounded-lg transition-colors ${typeFilter === 'All'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     All
@@ -196,8 +196,8 @@ export default function FabricCatalog() {
                                         key={type}
                                         onClick={() => setTypeFilter(type)}
                                         className={`px-4 py-2 rounded-lg transition-colors ${typeFilter === type
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                             }`}
                                     >
                                         {type}
@@ -215,8 +215,8 @@ export default function FabricCatalog() {
                                 <button
                                     onClick={() => setColorFilter('All')}
                                     className={`px-4 py-2 rounded-lg transition-colors ${colorFilter === 'All'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     All Colors
@@ -226,8 +226,8 @@ export default function FabricCatalog() {
                                         key={color}
                                         onClick={() => setColorFilter(color)}
                                         className={`px-4 py-2 rounded-lg transition-colors ${colorFilter === color
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                             }`}
                                     >
                                         {color}

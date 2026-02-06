@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Plus, Ruler, ArrowRight, User, LogOut, Info,
-    ChevronRight, Sparkles
+    ChevronRight, Sparkles, Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -51,6 +51,51 @@ export default function MeasurementsPage() {
             console.error("Failed to fetch profiles", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDownloadPDF = async (profileId: number, profileName: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login to download PDF');
+                return;
+            }
+
+            // Show loading state
+            const button = document.getElementById(`download-${profileId}`);
+            if (button) {
+                button.innerHTML = 'Downloading...';
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/measurements/${profileId}/export-pdf`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to download PDF');
+            }
+
+            // Create blob and download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `measurement_${profileName.replace(/\s+/g, '_')}_${profileId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Reset button
+            if (button) {
+                button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Download PDF';
+            }
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            alert('Failed to download PDF. Please try again.');
         }
     };
 
@@ -153,6 +198,14 @@ export default function MeasurementsPage() {
                                 </p>
 
                                 <div className="flex gap-3 mt-auto">
+                                    <button
+                                        id={`download-${profile.id}`}
+                                        className="flex-1 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 font-medium py-2.5 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                                        onClick={() => handleDownloadPDF(profile.id, profile.profile_name)}
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        PDF
+                                    </button>
                                     <button
                                         className="flex-1 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium py-2.5 px-4 rounded-xl transition-colors text-sm"
                                         onClick={() => router.push(`/measurements/${profile.id}`)}

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Check, Trash2, Bell } from 'lucide-react';
-import { getNotifications, markAsRead, markAllAsRead, deleteNotification, Notification } from '@/lib/api/notifications';
+import { getNotifications, markAsRead, markAllAsRead, deleteNotification, Notification, getUnreadCount } from '@/lib/api/notifications';
 
 interface NotificationDropdownProps {
     isOpen: boolean;
