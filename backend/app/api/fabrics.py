@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import require_role, get_current_user_optional
+from app.core.dependencies import require_role
 from app.models.user import UserRole, User
 from app.models.fabric import Fabric
 from app.schemas.fabric import FabricCreate, FabricResponse, FabricUpdate
