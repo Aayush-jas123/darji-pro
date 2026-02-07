@@ -11,6 +11,7 @@ class AuditLog(Base):
     """Audit log for tracking user actions."""
     
     __tablename__ = "audit_logs"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
