@@ -4,23 +4,17 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-    LayoutDashboard,
-    Calendar,
-    Scissors,
-    Ruler,
     LogOut,
     User,
     Menu,
     X,
-    Settings,
-    Clock,
-    Bell,
+    Shield,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SidebarNav } from '@/components/SidebarNav';
-import { tailorNavItems } from '@/lib/navigation';
+import { adminNavItems } from '@/lib/navigation';
 
-export default function TailorLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -39,8 +33,8 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
 
         if (userData) {
             const parsedUser = JSON.parse(userData);
-            if (parsedUser.role !== 'tailor' && parsedUser.role !== 'admin') {
-                // Redirect if not tailor (allow admin for testing)
+            if (parsedUser.role !== 'admin') {
+                // Redirect if not admin
                 router.push('/dashboard');
                 return;
             }
@@ -68,7 +62,7 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
         router.push('/login');
     };
 
-    const navItems = tailorNavItems;
+    const navItems = adminNavItems;
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors duration-300">
@@ -96,11 +90,11 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
             >
                 <div className="p-6 flex items-center justify-between">
                     <div className={`flex items-center gap-3 ${!isSidebarOpen && !isMobile ? 'justify-center mx-auto' : ''}`}>
-                        <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shrink-0">
-                            <Scissors className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
+                            <Shield className="w-5 h-5 text-white" />
                         </div>
                         {(isSidebarOpen || isMobile) && (
-                            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                 Darji Pro
                             </span>
                         )}
@@ -131,7 +125,7 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
                     {(isSidebarOpen || isMobile) && user && (
                         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                                     <User className="w-5 h-5" />
                                 </div>
                                 <div>
@@ -139,7 +133,7 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
                                         {user.full_name}
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Tailor
+                                        Admin
                                     </p>
                                 </div>
                             </div>
