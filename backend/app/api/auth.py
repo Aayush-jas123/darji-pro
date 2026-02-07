@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,6 +34,7 @@ router = APIRouter()
 async def register(
     user_data: RegisterRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
 ):
     """
     Register a new user.
@@ -41,8 +42,17 @@ async def register(
     - **email**: Valid email address
     - **password**: Minimum 8 characters
     - **full_name**: User's full name
-    - **role**: User role (default: customer)
+    - **role**: User role (forced to customer for public registration)
+    
+    Note: Only customers can register publicly. Tailor and admin accounts
+    must be created by administrators through the admin panel.
     """
+    from app.core.audit import create_audit_log, AuditAction
+    
+    # Force customer role for public registration (security measure)
+    # Tailor and admin accounts should be created by admins only
+    user_data.role = UserRole.CUSTOMER
+    
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == user_data.email))
     existing_user = result.scalar_one_or_none()
@@ -76,6 +86,17 @@ async def register(
     await db.commit()
     await db.refresh(new_user)
     
+    # Log user registration
+    await create_audit_log(
+        db=db,
+        action=AuditAction.USER_REGISTER,
+        user=new_user,
+        resource_type="user",
+        resource_id=new_user.id,
+        details={"role": new_user.role},
+        request=request,
+    )
+    
     return new_user
 
 
@@ -83,17 +104,29 @@ async def register(
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
 ):
     """
     Login with email and password to get access token.
     
     OAuth2 compatible token login, get an access token for future requests.
     """
+    from app.core.audit import create_audit_log, AuditAction
+    
     # Find user by email
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
+        # Log failed login attempt
+        if user:
+            await create_audit_log(
+                db=db,
+                action="user.login_failed",
+                user=user,
+                details={"reason": "incorrect_password"},
+                request=request,
+            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -114,6 +147,15 @@ async def login(
     from datetime import datetime
     user.last_login = datetime.utcnow()
     await db.commit()
+    
+    # Log successful login
+    await create_audit_log(
+        db=db,
+        action=AuditAction.USER_LOGIN,
+        user=user,
+        details={"method": "oauth2_form"},
+        request=request,
+    )
     
     return {
         "access_token": access_token,
