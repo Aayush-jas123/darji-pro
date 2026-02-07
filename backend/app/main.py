@@ -107,9 +107,10 @@ async def health_check():
 
 
 # Import and include routers
-from app.api import auth, users, appointments, measurements, branches, ml, admin, tailor, orders, invoices, search, analytics, setup, fabrics, notifications, uploads, diagnostics, fabric_seed
+from app.api import auth, users, appointments, measurements, branches, ml, admin, tailor, orders, invoices, search, analytics, setup, fabrics, notifications, uploads, diagnostics, fabric_seed, setup_complete
 
 app.include_router(setup.router, prefix="/api/setup", tags=["Setup"])
+app.include_router(setup_complete.router, prefix="/api/setup-complete", tags=["Complete Setup"])
 app.include_router(diagnostics.router, prefix="/api/diagnostics", tags=["Diagnostics"])
 app.include_router(fabric_seed.router, prefix="/api/fabric-seed", tags=["Fabric Seeding"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
