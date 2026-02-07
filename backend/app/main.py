@@ -25,6 +25,40 @@ async def lifespan(app: FastAPI):
     print(f"📊 Environment: {settings.ENVIRONMENT}")
     print(f"🔒 Debug Mode: {settings.DEBUG}")
     
+    # Run database migrations on startup
+    if settings.ENVIRONMENT == "production":
+        import os
+        try:
+            print("🔄 Running database migrations on startup...")
+            # Detect path for alembic.ini
+            cwd = os.getcwd()
+            original_cwd = cwd
+            alembic_ini_path = "alembic.ini"
+            
+            try:
+                # Helper to find alembic.ini
+                if not os.path.exists(alembic_ini_path):
+                    if os.path.exists("backend/alembic.ini"):
+                        alembic_ini_path = "backend/alembic.ini"
+                        os.chdir("backend")
+                    elif os.path.exists("../alembic.ini"):
+                        alembic_ini_path = "../alembic.ini"
+                        os.chdir("..")
+                
+                if os.path.exists(alembic_ini_path):
+                    alembic_cfg = Config(alembic_ini_path)
+                    command.upgrade(alembic_cfg, "head")
+                    print("✅ Database migrations completed successfully!")
+                else:
+                    print(f"⚠️ Could not find alembic.ini in {cwd}, skipping auto-migration.")
+            finally:
+                os.chdir(original_cwd)
+                
+        except Exception as e:
+            print(f"❌ Database migration failed on startup: {e}")
+            import traceback
+            traceback.print_exc()
+    
     yield
     
     # Shutdown
