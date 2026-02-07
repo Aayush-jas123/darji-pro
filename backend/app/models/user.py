@@ -38,6 +38,22 @@ class User(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_priority: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # For VIP customers
     
+    # Account Status (for approval workflow)
+    account_status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)  # active, pending, rejected, suspended
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_verification_token: Mapped[str] = mapped_column(String(255), nullable=True)
+    email_verification_sent_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    
+    # Approval tracking (for tailors)
+    approval_notes: Mapped[str] = mapped_column(String, nullable=True)
+    approved_by_id: Mapped[int] = mapped_column(nullable=True)
+    approved_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    
+    # Tailor-specific fields
+    experience_years: Mapped[int] = mapped_column(nullable=True)
+    specialization: Mapped[str] = mapped_column(String(500), nullable=True)
+    bio: Mapped[str] = mapped_column(String, nullable=True)
+    
     # OAuth
     google_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=True)
     facebook_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=True)

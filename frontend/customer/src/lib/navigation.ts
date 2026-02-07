@@ -12,6 +12,7 @@ import {
     BarChart3,
     FileText,
     Shield,
+    UserCheck,
 } from 'lucide-react';
 import { NavItem } from '@/components/SidebarNav';
 
@@ -43,6 +44,7 @@ export const adminNavItems: NavItem[] = [
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/appointments', label: 'Appointments', icon: Calendar },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/admin/tailor-applications', label: 'Tailor Applications', icon: UserCheck },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
     { href: '/notifications', label: 'Notifications', icon: Bell },

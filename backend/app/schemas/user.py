@@ -21,6 +21,17 @@ class UserCreate(UserBase):
     role: UserRole = UserRole.CUSTOMER
 
 
+class TailorRegistrationRequest(BaseModel):
+    """Schema for tailor self-registration."""
+    full_name: str = Field(..., min_length=1, max_length=255)
+    email: EmailStr
+    phone: str = Field(..., max_length=20)
+    password: str = Field(..., min_length=8, max_length=100)
+    experience_years: int = Field(..., ge=0, le=50)
+    specialization: str = Field(..., min_length=1, max_length=500)
+    bio: Optional[str] = Field(None, max_length=2000)
+
+
 class UserUpdate(BaseModel):
     """Schema for updating user information."""
     full_name: Optional[str] = Field(None, min_length=1, max_length=255)

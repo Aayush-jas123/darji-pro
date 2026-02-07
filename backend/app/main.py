@@ -110,7 +110,7 @@ async def health_check():
 from app.api import (
     auth, users, appointments, measurements,
     branches, ml, admin, tailor, orders, invoices, search,
-    analytics, fabrics, notifications, uploads, audit
+    analytics, fabrics, notifications, uploads, audit, tailor_registration
 )
 
 # Register API routers
@@ -130,6 +130,7 @@ app.include_router(fabrics.router, prefix="/api/fabrics", tags=["Fabrics"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["File Uploads"])
 app.include_router(audit.router, prefix="/api/audit", tags=["Audit Logs"])
+app.include_router(tailor_registration.router, prefix="/api/tailor-registration", tags=["Tailor Registration"])
 
 
 

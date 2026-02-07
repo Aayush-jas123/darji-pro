@@ -139,6 +139,24 @@ async def login(
             detail="Account is inactive",
         )
     
+    # Check account status (for approval workflow)
+    if hasattr(user, 'account_status'):
+        if user.account_status == "pending":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account is pending approval. Please wait for admin verification.",
+            )
+        elif user.account_status == "rejected":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your application was rejected. Please contact support for more information.",
+            )
+        elif user.account_status == "suspended":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account has been suspended. Please contact support.",
+            )
+    
     # Create access and refresh tokens
     access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
     refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})

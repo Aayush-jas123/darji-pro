@@ -133,11 +133,19 @@ export default function RegisterPage() {
                         Sign up
                     </Button>
 
-                    <div className="text-center text-sm">
-                        <span className="text-gray-600">Already have an account? </span>
-                        <Link href="/login" className="font-medium text-primary-600 hover:text-primary-500">
-                            Sign in
-                        </Link>
+                    <div className="text-center text-sm space-y-2">
+                        <div>
+                            <span className="text-gray-600">Already have an account? </span>
+                            <Link href="/login" className="font-medium text-primary-600 hover:text-primary-500">
+                                Sign in
+                            </Link>
+                        </div>
+                        <div className="pt-2 border-t border-gray-200">
+                            <span className="text-gray-600">Are you a tailor? </span>
+                            <Link href="/register-tailor" className="font-medium text-primary-600 hover:text-primary-500">
+                                Register as Tailor
+                            </Link>
+                        </div>
                     </div>
                 </form>
             </div>
