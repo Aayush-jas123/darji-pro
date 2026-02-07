@@ -22,7 +22,6 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [selectedRole, setSelectedRole] = useState('customer');
     const {
         register,
         handleSubmit,
@@ -37,9 +36,10 @@ export default function RegisterPage() {
 
     const onSubmit = async (data: RegisterFormData) => {
         try {
+            // Always register as customer for public registration
             await api.post('/api/auth/register', {
                 ...data,
-                role: selectedRole,
+                role: 'customer',
             });
             router.push('/login?registered=true');
         } catch (error: any) {
@@ -92,22 +92,30 @@ export default function RegisterPage() {
                             placeholder="••••••••"
                         />
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Register as
-                            </label>
-                            <select
-                                value={selectedRole}
-                                onChange={(e) => setSelectedRole(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                                <option value="customer">Customer</option>
-                                <option value="tailor">Tailor</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Select your account type
-                            </p>
+                        {/* Role Information */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3 flex-1">
+                                    <h3 className="text-sm font-medium text-blue-800">
+                                        Registering as Customer
+                                    </h3>
+                                    <div className="mt-2 text-sm text-blue-700">
+                                        <p>
+                                            Public registration is for <strong>customer accounts</strong> only.
+                                            You'll be able to book appointments, manage measurements, and track orders.
+                                        </p>
+                                        <p className="mt-2">
+                                            <strong>Need a Tailor or Admin account?</strong><br />
+                                            Please contact an administrator to create your account.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
