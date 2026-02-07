@@ -108,7 +108,7 @@ async def health_check():
 
 # Import API routers
 from app.api import (
-    auth, users, appointments, measurements, availability,
+    auth, users, appointments, measurements,
     branches, ml, admin, tailor, orders, invoices, search,
     analytics, fabrics, notifications, uploads, audit
 )
@@ -118,7 +118,6 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(appointments.router, prefix="/api/appointments", tags=["Appointments"])
 app.include_router(measurements.router, prefix="/api/measurements", tags=["Measurements"])
-app.include_router(availability.router, prefix="/api/availability", tags=["Availability"])
 app.include_router(branches.router, prefix="/api/branches", tags=["Branches"])
 app.include_router(ml.router, prefix="/api/ml", tags=["ML & AI Recommendations"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
