@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { RoleGuard } from '@/components/RoleGuard';
 import api from '@/lib/api';
 
 function DashboardContent() {
@@ -330,12 +331,14 @@ function DashboardContent() {
 
 export default function DashboardPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="animate-spin w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent" />
-            </div>
-        }>
-            <DashboardContent />
-        </Suspense>
+        <RoleGuard allowedRoles={['customer']}>
+            <Suspense fallback={
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                    <div className="animate-spin w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent" />
+                </div>
+            }>
+                <DashboardContent />
+            </Suspense>
+        </RoleGuard>
     );
 }

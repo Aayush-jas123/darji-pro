@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,12 +15,14 @@ const registerSchema = z.object({
     email: z.string().email('Invalid email address'),
     phone: z.string().min(10, 'Phone number must be at least 10 digits'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
+    role: z.enum(['customer', 'tailor', 'admin']).default('customer'),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
     const router = useRouter();
+    const [selectedRole, setSelectedRole] = useState('customer');
     const {
         register,
         handleSubmit,
@@ -28,13 +30,16 @@ export default function RegisterPage() {
         setError,
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
+        defaultValues: {
+            role: 'customer',
+        },
     });
 
     const onSubmit = async (data: RegisterFormData) => {
         try {
             await api.post('/api/auth/register', {
                 ...data,
-                role: 'customer',
+                role: selectedRole,
             });
             router.push('/login?registered=true');
         } catch (error: any) {
@@ -86,6 +91,24 @@ export default function RegisterPage() {
                             error={errors.password?.message}
                             placeholder="••••••••"
                         />
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Register as
+                            </label>
+                            <select
+                                value={selectedRole}
+                                onChange={(e) => setSelectedRole(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="customer">Customer</option>
+                                <option value="tailor">Tailor</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Select your account type
+                            </p>
+                        </div>
                     </div>
 
                     {errors.root && (

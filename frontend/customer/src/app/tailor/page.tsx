@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { RoleGuard } from '@/components/RoleGuard';
 
-export default function TailorDashboard() {
+function TailorDashboardContent() {
     const router = useRouter();
     const [stats, setStats] = useState({
         todayAppointments: 0,
@@ -205,5 +206,13 @@ export default function TailorDashboard() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function TailorDashboard() {
+    return (
+        <RoleGuard allowedRoles={['tailor']}>
+            <TailorDashboardContent />
+        </RoleGuard>
     );
 }

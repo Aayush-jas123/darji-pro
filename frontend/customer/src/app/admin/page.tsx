@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { RoleGuard } from '@/components/RoleGuard';
 
 interface DashboardStats {
     users: {
@@ -26,7 +27,7 @@ interface DashboardStats {
     };
 }
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
     const router = useRouter();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -337,5 +338,13 @@ export default function AdminDashboard() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function AdminDashboard() {
+    return (
+        <RoleGuard allowedRoles={['admin']}>
+            <AdminDashboardContent />
+        </RoleGuard>
     );
 }
