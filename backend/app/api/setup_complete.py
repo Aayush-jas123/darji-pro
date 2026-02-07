@@ -11,9 +11,14 @@ router = APIRouter()
 async def create_all_tables():
     """Create ALL database tables using SQLAlchemy metadata (includes fabrics table!)"""
     try:
-        from app.models import Base
+        from app.core.database import Base  # Import Base from correct location
         from app.models.user import User, UserRole
         from app.models.branch import Branch
+        from app.models.fabric import Fabric  # Import to ensure table is registered
+        from app.models.appointment import Appointment
+        from app.models.measurement import MeasurementProfile
+        from app.models.order import Order
+        from app.models.invoice import Invoice
         
         async with engine.begin() as conn:
             # Drop all tables first
