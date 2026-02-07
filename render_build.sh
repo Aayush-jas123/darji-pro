@@ -8,8 +8,8 @@ echo "📦 Installing Backend Dependencies..."
 cd backend
 pip install -r requirements-render.txt
 
-# echo "🗄️ Running Database Migrations..."
-# alembic upgrade head
+echo "🗄️ Running Database Migrations..."
+alembic upgrade head
 
 echo "🎨 Building Frontend..."
 cd ../frontend/customer
