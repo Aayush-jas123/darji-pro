@@ -106,17 +106,19 @@ async def health_check():
     }
 
 
-# Import and include routers
-from app.api import auth, users, appointments, measurements, branches, ml, admin, tailor, orders, invoices, search, analytics, setup, fabrics, notifications, uploads, diagnostics, fabric_seed, setup_complete
+# Import API routers
+from app.api import (
+    auth, users, appointments, measurements, availability,
+    branches, ml, admin, tailor, orders, invoices, search,
+    analytics, fabrics, notifications, uploads, audit
+)
 
-app.include_router(setup.router, prefix="/api/setup", tags=["Setup"])
-app.include_router(setup_complete.router, prefix="/api/setup-complete", tags=["Complete Setup"])
-app.include_router(diagnostics.router, prefix="/api/diagnostics", tags=["Diagnostics"])
-app.include_router(fabric_seed.router, prefix="/api/fabric-seed", tags=["Fabric Seeding"])
+# Register API routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(appointments.router, prefix="/api/appointments", tags=["Appointments"])
 app.include_router(measurements.router, prefix="/api/measurements", tags=["Measurements"])
+app.include_router(availability.router, prefix="/api/availability", tags=["Availability"])
 app.include_router(branches.router, prefix="/api/branches", tags=["Branches"])
 app.include_router(ml.router, prefix="/api/ml", tags=["ML & AI Recommendations"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
@@ -128,6 +130,7 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics &
 app.include_router(fabrics.router, prefix="/api/fabrics", tags=["Fabrics"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["File Uploads"])
+app.include_router(audit.router, prefix="/api/audit", tags=["Audit Logs"])
 
 
 

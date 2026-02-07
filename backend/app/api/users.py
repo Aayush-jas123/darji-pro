@@ -57,6 +57,7 @@ async def change_my_password(
 ):
     """Change current user's password."""
     from app.core.security import verify_password, get_password_hash
+    from app.core.audit import create_audit_log, AuditAction
     
     # Verify current password
     if not verify_password(password_update.current_password, current_user.hashed_password):
@@ -69,6 +70,15 @@ async def change_my_password(
     current_user.hashed_password = get_password_hash(password_update.new_password)
     
     await db.commit()
+    
+    # Log the password change
+    await create_audit_log(
+        db=db,
+        action=AuditAction.PASSWORD_CHANGED,
+        user=current_user,
+        resource_type="user",
+        resource_id=current_user.id,
+    )
     
     return {"message": "Password changed successfully"}
 
