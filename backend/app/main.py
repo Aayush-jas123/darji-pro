@@ -1,13 +1,15 @@
 """FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+from alembic.config import Config
+from alembic import command
 from app.core.config import settings
 
 
@@ -104,6 +106,39 @@ async def health_check():
         "environment": settings.ENVIRONMENT,
         "version": settings.VERSION
     }
+
+
+@app.get("/api/health/migrate")
+def manual_migrate(secret: str):
+    """Run database migrations manually."""
+    if secret != "supersecretfix":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    import os
+    try:
+        # Check current directory
+        cwd = os.getcwd()
+        print(f"Running migrations from: {cwd}")
+        
+        # Try to find alembic.ini
+        alembic_ini_path = "alembic.ini"
+        if not os.path.exists(alembic_ini_path):
+            # Try specific paths seen in Render
+            if os.path.exists("backend/alembic.ini"):
+                alembic_ini_path = "backend/alembic.ini"
+                os.chdir("backend") # Change to backend dir for alembic to work correctly
+            elif os.path.exists("../alembic.ini"):
+                alembic_ini_path = "../alembic.ini"
+                os.chdir("..")
+            else:
+                return {"error": f"alembic.ini not found in {cwd}"}
+
+        alembic_cfg = Config(alembic_ini_path)
+        command.upgrade(alembic_cfg, "head")
+        return {"message": "Migrations executed successfully", "config_path": alembic_ini_path}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
 
 
 # Import API routers
