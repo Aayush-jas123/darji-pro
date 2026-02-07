@@ -48,6 +48,8 @@ async def create_order(
     
     Admin or Tailor only.
     """
+    from app.core.audit import create_audit_log, AuditAction
+    
     # Verify appointment exists
     appt_result = await db.execute(
         select(Appointment).where(Appointment.id == order_data.appointment_id)
@@ -78,6 +80,20 @@ async def create_order(
     db.add(new_order)
     await db.commit()
     await db.refresh(new_order)
+    
+    # Log order creation
+    await create_audit_log(
+        db=db,
+        action=AuditAction.ORDER_CREATED,
+        user=current_user,
+        resource_type="order",
+        resource_id=new_order.id,
+        details={
+            "order_number": order_number,
+            "garment_type": order_data.garment_type,
+            "customer_id": appointment.customer_id,
+        },
+    )
     
     return new_order
 
@@ -157,6 +173,8 @@ async def update_order(
     
     Admin or Tailor only.
     """
+    from app.core.audit import create_audit_log, AuditAction
+    
     result = await db.execute(select(Order).where(Order.id == order_id))
     order = result.scalar_one_or_none()
     
@@ -202,6 +220,21 @@ async def update_order(
     await db.commit()
     await db.refresh(order)
     
+    # Log status change
+    if status_changed:
+        await create_audit_log(
+            db=db,
+            action=AuditAction.ORDER_STATUS_CHANGED,
+            user=current_user,
+            resource_type="order",
+            resource_id=order.id,
+            details={
+                "order_number": order.order_number,
+                "old_status": old_status.value,
+                "new_status": order.status.value,
+            },
+        )
+    
     # Send notification if status changed
     if status_changed:
         from app.services.notification import notification_service
@@ -237,13 +270,28 @@ async def delete_order(
     
     Admin only.
     """
+    from app.core.audit import create_audit_log
+    
     result = await db.execute(select(Order).where(Order.id == order_id))
     order = result.scalar_one_or_none()
     
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
+    # Store order details before deletion
+    order_number = order.order_number
+    
     await db.delete(order)
     await db.commit()
+    
+    # Log order deletion
+    await create_audit_log(
+        db=db,
+        action="order.deleted",
+        user=current_user,
+        resource_type="order",
+        resource_id=order_id,
+        details={"order_number": order_number},
+    )
     
     return {"message": "Order deleted successfully", "order_id": order_id}
