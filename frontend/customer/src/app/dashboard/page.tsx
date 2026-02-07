@@ -29,6 +29,20 @@ function DashboardContent() {
             return;
         }
 
+        // Check user role and redirect if necessary
+        const userRole = localStorage.getItem('userRole');
+        console.log('Dashboard - User role:', userRole);
+
+        if (userRole === 'admin') {
+            console.log('Redirecting admin to /admin');
+            router.push('/admin');
+            return;
+        } else if (userRole === 'tailor') {
+            console.log('Redirecting tailor to /tailor');
+            router.push('/tailor');
+            return;
+        }
+
         // Fetch user profile and recent appointments
         Promise.all([
             fetchProfile(),
@@ -58,6 +72,7 @@ function DashboardContent() {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
         router.push('/login');
     };
 

@@ -39,10 +39,14 @@ function LoginForm() {
             });
 
             const { access_token, role } = response.data;
+            console.log('Login response:', { access_token: access_token ? 'present' : 'missing', role });
+
             if (access_token) {
                 localStorage.setItem('token', access_token);
+                localStorage.setItem('userRole', role);
 
                 // Redirect based on role
+                console.log('Redirecting based on role:', role);
                 if (role === 'admin') {
                     router.push('/admin');
                 } else if (role === 'tailor') {
@@ -52,7 +56,7 @@ function LoginForm() {
                 }
             }
         } catch (error: any) {
-            console.error(error);
+            console.error('Login error:', error);
             setError('root', {
                 message: error.response?.data?.detail || 'Invalid email or password',
             });

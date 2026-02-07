@@ -119,7 +119,7 @@ async def login(
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "role": str(user.role) if hasattr(user.role, 'value') else str(user.role)
+        "role": user.role.value if hasattr(user.role, 'value') else str(user.role)
     }
 
 
@@ -163,7 +163,7 @@ async def login_json(
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "role": str(user.role) if hasattr(user.role, 'value') else str(user.role)
+        "role": user.role.value if hasattr(user.role, 'value') else str(user.role)
     }
 
 
@@ -210,7 +210,7 @@ async def refresh_token(
         "access_token": access_token,
         "refresh_token": new_refresh_token,
         "token_type": "bearer",
-        "role": str(user.role) if hasattr(user.role, 'value') else str(user.role)
+        "role": user.role.value if hasattr(user.role, 'value') else str(user.role)
     }
 
 
