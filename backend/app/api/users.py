@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_role
 from app.models.user import User, UserRole
-from app.schemas.user import UserResponse, UserUpdate, UserListResponse
+from app.schemas.user import UserResponse, UserUpdate, UserListResponse, UserPasswordUpdate
 from app.schemas.common import MessageResponse, PaginationParams
 
 router = APIRouter()
@@ -47,6 +47,30 @@ async def update_my_profile(
     await db.commit()
     await db.refresh(current_user)
     return current_user
+
+
+@router.put("/me/password", response_model=MessageResponse)
+async def change_my_password(
+    password_update: UserPasswordUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Change current user's password."""
+    from app.core.security import verify_password, get_password_hash
+    
+    # Verify current password
+    if not verify_password(password_update.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+    
+    # Update password
+    current_user.hashed_password = get_password_hash(password_update.new_password)
+    
+    await db.commit()
+    
+    return {"message": "Password changed successfully"}
 
 
 @router.get("", response_model=UserListResponse)
@@ -106,10 +130,16 @@ async def list_users(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
-    current_user: Annotated[User, Depends(require_role(["admin", "staff"]))],
+    current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Get user by ID (Admin/Staff only)."""
+    """
+    Get user by ID.
+    
+    - Admin/Staff: Can view any user
+    - Tailor: Can view customer details
+    - Customer: Can only view their own profile
+    """
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
@@ -119,7 +149,26 @@ async def get_user(
             detail="User not found",
         )
     
-    return user
+    # Permission check
+    if current_user.role in ["admin", "staff"]:
+        # Admin and staff can view any user
+        return user
+    elif current_user.role == "tailor":
+        # Tailors can only view customer details
+        if user.role != "customer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Tailors can only view customer details",
+            )
+        return user
+    else:
+        # Customers can only view their own profile
+        if user.id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view your own profile",
+            )
+        return user
 
 
 @router.put("/{user_id}", response_model=UserResponse)
