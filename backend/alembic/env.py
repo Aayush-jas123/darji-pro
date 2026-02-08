@@ -24,6 +24,7 @@ from app.models.measurement import MeasurementProfile, MeasurementVersion
 from app.models.system import AuditLog, Notification
 from app.models.order import Order
 from app.models.invoice import Invoice
+from app.models.fabric import Fabric
 
 # Alembic Config object
 config = context.config

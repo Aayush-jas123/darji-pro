@@ -3,7 +3,7 @@
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import String, DateTime, Integer, ForeignKey, Text, Boolean, JSON
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
@@ -137,3 +137,6 @@ class Notification(Base):
             self.status == NotificationStatus.FAILED 
             and self.retry_count < self.max_retries
         )
+
+    # Relationships
+    user = relationship("User", back_populates="notifications")
