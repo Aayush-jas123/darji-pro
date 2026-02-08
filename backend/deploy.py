@@ -88,22 +88,22 @@ def run_migrations():
     # We are in 'backend/'. 'app' is in 'backend/app'.
     # So 'import app.main' works.
     
-    command = [
+    server_cmd = [
         "uvicorn",
         "app.main:app",
         "--host", "0.0.0.0",
         "--port", port
     ]
     
-    print(f"Executing: {' '.join(command)}")
+    print(f"Executing: {' '.join(server_cmd)}")
     # Flush stdout before replacing process
     sys.stdout.flush()
     
     # Replace current process with uvicorn
     if sys.platform == 'win32':
-        subprocess.run(command)
+        subprocess.run(server_cmd)
     else:
-        os.execvp("uvicorn", command)
+        os.execvp("uvicorn", server_cmd)
 
 if __name__ == "__main__":
     run_migrations()
