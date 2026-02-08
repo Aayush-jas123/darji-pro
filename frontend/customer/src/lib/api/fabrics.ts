@@ -74,7 +74,7 @@ export async function getFabricTypes(): Promise<string[]> {
 export async function getFabricColors(): Promise<string[]> {
     try {
         const fabrics = await getFabrics();
-        const colors = [...new Set(fabrics.map(f => f.color).filter(Boolean))];
+        const colors = [...new Set(fabrics.map(f => f.color).filter(Boolean) as string[])];
         return colors.sort();
     } catch (error) {
         console.error('Error fetching fabric colors:', error);
@@ -88,10 +88,42 @@ export async function getFabricColors(): Promise<string[]> {
 export async function getFabricPatterns(): Promise<string[]> {
     try {
         const fabrics = await getFabrics();
-        const patterns = [...new Set(fabrics.map(f => f.pattern).filter(Boolean))];
+        const patterns = [...new Set(fabrics.map(f => f.pattern).filter(Boolean) as string[])];
         return patterns.sort();
     } catch (error) {
         console.error('Error fetching fabric patterns:', error);
         return [];
     }
+}
+
+/**
+ * Create a new fabric
+ */
+export async function createFabric(data: Partial<Fabric>): Promise<Fabric> {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/api/fabrics/`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+}
+
+/**
+ * Update an existing fabric
+ */
+export async function updateFabric(id: number, data: Partial<Fabric>): Promise<Fabric> {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(`${API_BASE_URL}/api/fabrics/${id}`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+}
+
+/**
+ * Delete a fabric
+ */
+export async function deleteFabric(id: number): Promise<void> {
+    const token = localStorage.getItem('token');
+    await axios.delete(`${API_BASE_URL}/api/fabrics/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
 }
