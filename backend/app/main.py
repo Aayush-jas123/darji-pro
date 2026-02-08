@@ -209,47 +209,33 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 import os
 
-# Robust path resolution for Render
-# On Render, the build command runs in root, but backend runs in backend/
-# We need to find where the frontend files actually are.
-current_dir = Path(__file__).parent.parent.resolve()
-root_dir = current_dir.parent.resolve()
+# Define the static directory path
+# Since render_start.sh cds into 'backend', this is relative to 'backend'
+# OR relative to where main.py is? 
+# Path(__file__) is backend/app/main.py
+# Parent is backend/app
+# Parent.parent is backend
+# So backend/static is at Path(__file__).parent.parent / "static"
 
-print(f"📂 Current Directory: {os.getcwd()}")
-print(f"📂 Resolved Root: {root_dir}")
+current_dir = Path(__file__).resolve().parent # backend/app
+backend_dir = current_dir.parent # backend
+static_dir = backend_dir / "static"
 
-# Try multiple possible locations for the frontend build
-possible_paths = [
-    root_dir / "frontend" / "customer" / "out",                # Standard structure
-    Path("/opt/render/project/src/frontend/customer/out"),     # Absolute Render path
-    current_dir.parent / "frontend" / "customer" / "out",      # Relative parent
-]
+print(f"📂 Resolved Static Directory: {static_dir}")
 
-frontend_path = None
-for path in possible_paths:
-    if path.exists() and path.is_dir():
-        frontend_path = path
-        break
-
-if frontend_path:
-    print(f"✅ Frontend found at: {frontend_path}")
-    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+if static_dir.exists() and static_dir.is_dir():
+    print(f"✅ Static directory found. Mounting frontend...")
+    # Mount / to serve static files
+    # html=True allows serving index.html for /
+    app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="frontend")
 else:
-    print("❌ Frontend NOT found. Checked paths:")
-    for p in possible_paths:
-        print(f"   - {p} (Exists: {p.exists()})")
-    
-    # List directories to help debug
+    print(f"❌ Static directory NOT found at {static_dir}")
+    print("Listing backend directory:")
     try:
-        print("📂 Directory listing of root:")
-        for item in os.listdir(root_dir):
-            print(f"  - {item}")
-        if (root_dir / "frontend").exists():
-            print("📂 Directory listing of frontend:")
-            for item in os.listdir(root_dir / "frontend"):
-                print(f"  - {item}")
+        for item in os.listdir(backend_dir):
+            print(f" - {item}")
     except Exception as e:
-        print(f"Error listing directories: {e}")
+        print(f"Error listing dir: {e}")
 
 @app.get("/debug-paths")
 def debug_paths():

@@ -1,30 +1,32 @@
 #!/usr/bin/env bash
+# Reference: https://docs.render.com/deploy-an-image
+
 # Exit on error
 set -o errexit
 
-echo "🚀 Starting Render Build..."
+echo "--- Installing Backend Dependencies ---"
+pip install -r backend/requirements-render.txt
 
-echo "📦 Installing Backend Dependencies..."
-cd backend
-pip install -r requirements-render.txt
-
-echo "🗄️ Running Database Migrations..."
-alembic upgrade head
-
-echo "🎨 Building Frontend..."
-cd ../frontend/customer
+echo "--- Installing Frontend Dependencies ---"
+cd frontend/customer
 npm install
+
+echo "--- Building Frontend ---"
+# Ensure we build for export
 npm run build
 
-# Create out directory if it doesn't exist (for compatibility)
-mkdir -p out
-# Copy .next/standalone to out if it exists
-if [ -d ".next/standalone" ]; then
-    cp -r .next/standalone/* out/ 2>/dev/null || true
-fi
-# Copy .next/static to out if it exists
-if [ -d ".next/static" ]; then
-    cp -r .next/static out/_next/static 2>/dev/null || true
-fi
+echo "--- Moving Static Files ---"
+# Go back to root
+cd ../..
 
-echo "✅ Build Complete!"
+# Create directory for static files in backend
+# backend/static will hold the frontend files
+mkdir -p backend/static
+
+# Copy build output (out folder) to backend/static
+# We use cp -r to copy the *contents* of out into static
+cp -r frontend/customer/out/* backend/static/
+
+echo "--- Build Complete ---"
+echo "Static files are now in backend/static"
+ls -la backend/static

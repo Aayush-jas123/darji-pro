@@ -24,6 +24,7 @@ else {
     Write-Host ""
     Write-Host "❌ Migration failed!" -ForegroundColor Red
     Write-Host "Please check your database connection in .env file" -ForegroundColor Yellow
+
 }
 
 Write-Host ""
