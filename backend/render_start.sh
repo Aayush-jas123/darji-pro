@@ -5,10 +5,11 @@ set -e
 # echo "Waiting for database..."
 # sleep 5
 
-echo "Current migration status:"
+echo "Current migration status (before fix):"
 alembic current
-echo "Migration history:"
-alembic history
+
+echo "Fixing DB state..."
+python fix_db_state.py
 
 echo "Running database migrations..."
 alembic upgrade head
