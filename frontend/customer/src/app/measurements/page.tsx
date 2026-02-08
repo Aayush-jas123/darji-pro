@@ -241,7 +241,7 @@ export default function MeasurementsPage() {
                                             <button
                                                 className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
                                                 title="Edit Profile"
-                                                onClick={() => router.push(`/measurements/${profile.id}`)}
+                                                onClick={() => router.push(`/measurements/edit?id=${profile.id}`)}
                                             >
                                                 <Info className="w-5 h-5" />
                                             </button>
@@ -256,7 +256,7 @@ export default function MeasurementsPage() {
                                             <Button
                                                 size="sm"
                                                 className="ml-auto w-auto shadow-md shadow-blue-500/10"
-                                                onClick={() => router.push(`/measurements/${profile.id}`)}
+                                                onClick={() => router.push(`/measurements/edit?id=${profile.id}`)}
                                             >
                                                 View Details <ChevronRight className="w-4 h-4 ml-1" />
                                             </Button>
