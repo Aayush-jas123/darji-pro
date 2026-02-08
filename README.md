@@ -17,6 +17,19 @@
 - [ML Features](#ml-features)
 - [Contributing](#contributing)
 
+## 🚧 Project Status
+
+### ✅ Recently Completed
+- **Monolith Deployment**: Successfully deployed to Render using a single service architecture (FastAPI serving Next.js static export).
+- **Fabric Catalog**: Complete management system for fabrics with Admin UI and backend APIs.
+- **Measurements UI**: Redesigned with a premium aesthetic, dark mode support, and improved UX.
+- **Notification System**: Implemented backend architecture, database models, and APIs for multi-channel notifications.
+
+### 🚀 Upcoming Features
+- **Booking Wizard**: Enhancing the appointment booking flow with a step-by-step wizard.
+- **Notification UI**: integrated notification bell and management interface for users.
+- **Admin Dashboard**: Comprehensive analytics and management tools.
+
 ## ✨ Features
 
 ### Backend API (FastAPI)
