@@ -4,9 +4,7 @@ services:
     name: darji-pro-backend
     runtime: python
     plan: free
-    buildCommand: |
-      cd backend && pip install -r requirements-render.txt && alembic upgrade head &&
-      cd ../frontend/customer && npm install && npm run build
+    buildCommand: chmod +x render_build.sh && ./render_build.sh
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION

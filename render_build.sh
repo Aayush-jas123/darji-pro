@@ -7,6 +7,11 @@ set -o errexit
 echo "--- Installing Backend Dependencies ---"
 pip install -r backend/requirements-render.txt
 
+echo "--- Running Database Migrations ---"
+cd backend
+alembic upgrade head
+cd ..
+
 echo "--- Installing Frontend Dependencies ---"
 cd frontend/customer
 npm install
