@@ -92,9 +92,12 @@ def upgrade() -> None:
     op.drop_constraint('appointments_customer_id_fkey', 'appointments', type_='foreignkey')
     op.create_foreign_key(None, 'appointments', 'users', ['customer_id'], ['id'])
     op.create_foreign_key(None, 'appointments', 'appointments', ['original_appointment_id'], ['id'])
-    op.drop_column('appointments', 'scheduled_time')
-    op.drop_column('appointments', 'notes')
-    op.drop_column('appointments', 'service_type')
+    if 'scheduled_time' in existing_columns:
+        op.drop_column('appointments', 'scheduled_time')
+    if 'notes' in existing_columns:
+        op.drop_column('appointments', 'notes')
+    if 'service_type' in existing_columns:
+        op.drop_column('appointments', 'service_type')
     op.create_foreign_key(None, 'audit_logs', 'users', ['user_id'], ['id'])
     # branches table checks
     branches_columns = [col['name'] for col in inspector.get_columns('branches')]
@@ -285,11 +288,16 @@ def upgrade() -> None:
         op.create_index(op.f('ix_measurement_versions_profile_id'), 'measurement_versions', ['profile_id'], unique=False)
     op.drop_constraint('measurement_versions_profile_id_fkey', 'measurement_versions', type_='foreignkey')
     op.create_foreign_key(None, 'measurement_versions', 'measurement_profiles', ['profile_id'], ['id'])
-    op.drop_column('measurement_versions', 'notes')
-    op.drop_column('measurement_versions', 'hips')
-    op.drop_column('measurement_versions', 'weight')
-    op.drop_column('measurement_versions', 'height')
-    op.drop_column('measurement_versions', 'shoulder_width')
+    if 'notes' in mv_columns:
+        op.drop_column('measurement_versions', 'notes')
+    if 'hips' in mv_columns:
+        op.drop_column('measurement_versions', 'hips')
+    if 'weight' in mv_columns:
+        op.drop_column('measurement_versions', 'weight')
+    if 'height' in mv_columns:
+        op.drop_column('measurement_versions', 'height')
+    if 'shoulder_width' in mv_columns:
+        op.drop_column('measurement_versions', 'shoulder_width')
     op.create_foreign_key(None, 'notifications', 'users', ['user_id'], ['id'])
     op.alter_column('orders', 'appointment_id',
                existing_type=sa.INTEGER(),
@@ -364,7 +372,8 @@ def upgrade() -> None:
     op.drop_constraint('tailor_availability_tailor_id_fkey', 'tailor_availability', type_='foreignkey')
     op.create_foreign_key(None, 'tailor_availability', 'users', ['tailor_id'], ['id'])
     op.create_foreign_key(None, 'tailor_availability', 'branches', ['branch_id'], ['id'])
-    op.drop_column('tailor_availability', 'is_available')
+    if 'is_available' in ta_columns:
+        op.drop_column('tailor_availability', 'is_available')
     # users table checks
     users_columns = [col['name'] for col in inspector.get_columns('users')]
     if 'account_status' not in users_columns:
@@ -652,7 +661,8 @@ def downgrade() -> None:
                existing_type=sa.BOOLEAN(),
                nullable=True,
                existing_server_default=sa.text('true'))
-    op.drop_column('branches', 'code')
+    if 'code' in branches_columns:
+        op.drop_column('branches', 'code')
     op.drop_constraint(None, 'audit_logs', type_='foreignkey')
     if 'service_type' not in existing_columns:
         op.add_column('appointments', sa.Column('service_type', sa.VARCHAR(length=100), autoincrement=False, nullable=False))
@@ -690,19 +700,34 @@ def downgrade() -> None:
     op.alter_column('appointments', 'customer_id',
                existing_type=sa.INTEGER(),
                nullable=True)
-    op.drop_column('appointments', 'completed_at')
-    op.drop_column('appointments', 'cancelled_at')
-    op.drop_column('appointments', 'reschedule_count')
-    op.drop_column('appointments', 'original_appointment_id')
-    op.drop_column('appointments', 'reminder_sent')
-    op.drop_column('appointments', 'confirmation_sent')
-    op.drop_column('appointments', 'cancellation_reason')
-    op.drop_column('appointments', 'tailor_notes')
-    op.drop_column('appointments', 'customer_notes')
-    op.drop_column('appointments', 'rush_fee')
-    op.drop_column('appointments', 'is_rush')
-    op.drop_column('appointments', 'is_priority')
-    op.drop_column('appointments', 'duration_minutes')
-    op.drop_column('appointments', 'scheduled_date')
-    op.drop_column('appointments', 'appointment_type')
+    if 'completed_at' in existing_columns:
+        op.drop_column('appointments', 'completed_at')
+    if 'cancelled_at' in existing_columns:
+        op.drop_column('appointments', 'cancelled_at')
+    if 'reschedule_count' in existing_columns:
+        op.drop_column('appointments', 'reschedule_count')
+    if 'original_appointment_id' in existing_columns:
+        op.drop_column('appointments', 'original_appointment_id')
+    if 'reminder_sent' in existing_columns:
+        op.drop_column('appointments', 'reminder_sent')
+    if 'confirmation_sent' in existing_columns:
+        op.drop_column('appointments', 'confirmation_sent')
+    if 'cancellation_reason' in existing_columns:
+        op.drop_column('appointments', 'cancellation_reason')
+    if 'tailor_notes' in existing_columns:
+        op.drop_column('appointments', 'tailor_notes')
+    if 'customer_notes' in existing_columns:
+        op.drop_column('appointments', 'customer_notes')
+    if 'rush_fee' in existing_columns:
+        op.drop_column('appointments', 'rush_fee')
+    if 'is_rush' in existing_columns:
+        op.drop_column('appointments', 'is_rush')
+    if 'is_priority' in existing_columns:
+        op.drop_column('appointments', 'is_priority')
+    if 'duration_minutes' in existing_columns:
+        op.drop_column('appointments', 'duration_minutes')
+    if 'scheduled_date' in existing_columns:
+        op.drop_column('appointments', 'scheduled_date')
+    if 'appointment_type' in existing_columns:
+        op.drop_column('appointments', 'appointment_type')
     # ### end Alembic commands ###
