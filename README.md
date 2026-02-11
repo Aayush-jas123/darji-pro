@@ -24,11 +24,13 @@
 - **Fabric Catalog**: Complete management system for fabrics with Admin UI and backend APIs.
 - **Measurements UI**: Redesigned with a premium aesthetic, dark mode support, and improved UX.
 - **Notification System**: Implemented backend architecture, database models, and APIs for multi-channel notifications.
-
-### 🚀 Upcoming Features
 - **Booking Wizard**: Enhancing the appointment booking flow with a step-by-step wizard.
 - **Notification UI**: integrated notification bell and management interface for users.
 - **Admin Dashboard**: Comprehensive analytics and management tools.
+
+### 🚀 Upcoming Features
+- **Payment Integration**: Secure payment processing for orders.
+- **Customer Chat**: Real-time chat with tailors.
 
 ## ✨ Features
 
@@ -51,7 +53,7 @@
 
 ### Frontend Applications
 - 🎨 **Customer Portal** (Next.js 14 + TypeScript)
-- 👔 **Admin Dashboard** (Coming soon)
+- 👔 **Admin Dashboard** (Next.js 14 + TypeScript)
 - 🎭 **Beautiful UI** with Framer Motion animations
 - 📱 **Responsive Design** with Tailwind CSS
 
