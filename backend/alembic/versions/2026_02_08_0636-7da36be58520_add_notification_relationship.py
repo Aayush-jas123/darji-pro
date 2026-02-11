@@ -513,12 +513,7 @@ def downgrade() -> None:
     op.alter_column('tailor_availability', 'tailor_id',
                existing_type=sa.INTEGER(),
                nullable=True)
-    op.drop_column('tailor_availability', 'updated_at')
-    op.drop_column('tailor_availability', 'created_at')
-    op.drop_column('tailor_availability', 'is_active')
-    op.drop_column('tailor_availability', 'max_appointments_per_day')
-    op.drop_column('tailor_availability', 'buffer_time_minutes')
-    op.drop_column('tailor_availability', 'slot_duration_minutes')
+    # Removed destructive drops for tailor_availability columns (updated_at, created_at, is_active, max_appointments_per_day, buffer_time_minutes, slot_duration_minutes) which are required by the model.
     op.drop_index(op.f('ix_orders_tailor_id'), table_name='orders')
     op.drop_index(op.f('ix_orders_status'), table_name='orders')
     op.drop_index(op.f('ix_orders_order_number'), table_name='orders')
@@ -569,27 +564,11 @@ def downgrade() -> None:
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
     op.alter_column('measurement_versions', 'fit_preference',
                existing_type=sa.VARCHAR(length=50),
-               nullable=True)
+               nullable=False)
     op.alter_column('measurement_versions', 'profile_id',
                existing_type=sa.INTEGER(),
                nullable=True)
-    op.drop_column('measurement_versions', 'change_notes')
-    op.drop_column('measurement_versions', 'measurement_method')
-    op.drop_column('measurement_versions', 'special_requirements')
-    op.drop_column('measurement_versions', 'posture_notes')
-    op.drop_column('measurement_versions', 'additional_measurements')
-    op.drop_column('measurement_versions', 'front_length')
-    op.drop_column('measurement_versions', 'back_length')
-    op.drop_column('measurement_versions', 'ankle')
-    op.drop_column('measurement_versions', 'calf')
-    op.drop_column('measurement_versions', 'knee')
-    op.drop_column('measurement_versions', 'thigh')
-    op.drop_column('measurement_versions', 'outseam')
-    op.drop_column('measurement_versions', 'wrist')
-    op.drop_column('measurement_versions', 'bicep')
-    op.drop_column('measurement_versions', 'arm_length')
-    op.drop_column('measurement_versions', 'hip')
-    op.drop_column('measurement_versions', 'shoulder')
+    # Removed destructive drops for measurement_versions columns which are required by the model.
     op.add_column('measurement_profiles', sa.Column('user_id', sa.INTEGER(), autoincrement=False, nullable=True))
     op.drop_constraint(None, 'measurement_profiles', type_='foreignkey')
     op.drop_constraint(None, 'measurement_profiles', type_='foreignkey')
@@ -608,12 +587,7 @@ def downgrade() -> None:
                existing_type=sa.BOOLEAN(),
                nullable=True,
                existing_server_default=sa.text('false'))
-    op.drop_column('measurement_profiles', 'rejection_reason')
-    op.drop_column('measurement_profiles', 'approved_at')
-    op.drop_column('measurement_profiles', 'approved_by_id')
-    op.drop_column('measurement_profiles', 'status')
-    op.drop_column('measurement_profiles', 'current_version')
-    op.drop_column('measurement_profiles', 'customer_id')
+    # Removed destructive drops for measurement_profiles columns which are required by the model.
     op.drop_index(op.f('ix_invoices_status'), table_name='invoices')
     op.drop_index(op.f('ix_invoices_order_id'), table_name='invoices')
     op.drop_index(op.f('ix_invoices_invoice_number'), table_name='invoices')
@@ -678,7 +652,7 @@ def downgrade() -> None:
                nullable=True,
                existing_server_default=sa.text('true'))
     op.drop_index(op.f('ix_branches_id'), table_name='branches')
-    op.drop_index(op.f('ix_branches_code'), table_name='branches')
+    # Removed destructive drop for branches.code index
     op.alter_column('branches', 'updated_at',
                existing_type=postgresql.TIMESTAMP(),
                nullable=True,
@@ -691,8 +665,7 @@ def downgrade() -> None:
                existing_type=sa.BOOLEAN(),
                nullable=True,
                existing_server_default=sa.text('true'))
-    if 'code' in branches_columns:
-        op.drop_column('branches', 'code')
+    # Removed destructive drop for branches.code column
     op.drop_constraint(None, 'audit_logs', type_='foreignkey')
     if 'service_type' not in existing_columns:
         op.add_column('appointments', sa.Column('service_type', sa.VARCHAR(length=100), autoincrement=False, nullable=False))
@@ -730,34 +703,5 @@ def downgrade() -> None:
     op.alter_column('appointments', 'customer_id',
                existing_type=sa.INTEGER(),
                nullable=True)
-    if 'completed_at' in existing_columns:
-        op.drop_column('appointments', 'completed_at')
-    if 'cancelled_at' in existing_columns:
-        op.drop_column('appointments', 'cancelled_at')
-    if 'reschedule_count' in existing_columns:
-        op.drop_column('appointments', 'reschedule_count')
-    if 'original_appointment_id' in existing_columns:
-        op.drop_column('appointments', 'original_appointment_id')
-    if 'reminder_sent' in existing_columns:
-        op.drop_column('appointments', 'reminder_sent')
-    if 'confirmation_sent' in existing_columns:
-        op.drop_column('appointments', 'confirmation_sent')
-    if 'cancellation_reason' in existing_columns:
-        op.drop_column('appointments', 'cancellation_reason')
-    if 'tailor_notes' in existing_columns:
-        op.drop_column('appointments', 'tailor_notes')
-    if 'customer_notes' in existing_columns:
-        op.drop_column('appointments', 'customer_notes')
-    if 'rush_fee' in existing_columns:
-        op.drop_column('appointments', 'rush_fee')
-    if 'is_rush' in existing_columns:
-        op.drop_column('appointments', 'is_rush')
-    if 'is_priority' in existing_columns:
-        op.drop_column('appointments', 'is_priority')
-    if 'duration_minutes' in existing_columns:
-        op.drop_column('appointments', 'duration_minutes')
-    if 'scheduled_date' in existing_columns:
-        op.drop_column('appointments', 'scheduled_date')
-    if 'appointment_type' in existing_columns:
-        op.drop_column('appointments', 'appointment_type')
+    # Removed destructive drops for appointments columns which are required by the model.
     # ### end Alembic commands ###
