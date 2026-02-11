@@ -7,8 +7,11 @@ set -o errexit
 echo "--- Installing Backend Dependencies ---"
 pip install -r backend/requirements-render.txt
 
-echo "--- Running Database Migrations ---"
+echo "--- Running DB State Fix ---"
 cd backend
+python fix_db_state.py || echo "⚠️ DB state fix failed or not needed, continuing..."
+
+echo "--- Running Database Migrations ---"
 alembic upgrade head
 cd ..
 
