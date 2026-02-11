@@ -241,7 +241,8 @@ def upgrade() -> None:
         op.drop_constraint('measurement_profiles_user_id_fkey', 'measurement_profiles', type_='foreignkey')
     op.create_foreign_key(None, 'measurement_profiles', 'users', ['customer_id'], ['id'])
     op.create_foreign_key(None, 'measurement_profiles', 'users', ['approved_by_id'], ['id'])
-    op.drop_column('measurement_profiles', 'user_id')
+    if 'user_id' in mp_columns:
+        op.drop_column('measurement_profiles', 'user_id')
     # measurement_versions table checks
     mv_columns = [col['name'] for col in inspector.get_columns('measurement_versions')]
     mv_indexes = [idx['name'] for idx in inspector.get_indexes('measurement_versions')]
@@ -446,8 +447,15 @@ def upgrade() -> None:
         op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     if 'ix_users_phone' not in users_indexes:
         op.create_index(op.f('ix_users_phone'), 'users', ['phone'], unique=True)
-    op.create_unique_constraint(None, 'users', ['google_id'])
-    op.create_unique_constraint(None, 'users', ['facebook_id'])
+    # Check for existing unique constraints on google_id and facebook_id
+    users_unique_cons = inspector.get_unique_constraints('users')
+    has_google_id = any(uc['column_names'] == ['google_id'] for uc in users_unique_cons)
+    has_facebook_id = any(uc['column_names'] == ['facebook_id'] for uc in users_unique_cons)
+
+    if not has_google_id:
+        op.create_unique_constraint(None, 'users', ['google_id'])
+    if not has_facebook_id:
+        op.create_unique_constraint(None, 'users', ['facebook_id'])
     # ### end Alembic commands ###
 
 
