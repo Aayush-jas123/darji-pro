@@ -89,7 +89,10 @@ def upgrade() -> None:
         op.create_index(op.f('ix_appointments_status'), 'appointments', ['status'], unique=False)
     if 'ix_appointments_tailor_id' not in existing_indexes:
         op.create_index(op.f('ix_appointments_tailor_id'), 'appointments', ['tailor_id'], unique=False)
-    op.drop_constraint('appointments_customer_id_fkey', 'appointments', type_='foreignkey')
+    # appointments table checks (constraints)
+    appointments_constraints = [con['name'] for con in inspector.get_foreign_keys('appointments')]
+    if 'appointments_customer_id_fkey' in appointments_constraints:
+        op.drop_constraint('appointments_customer_id_fkey', 'appointments', type_='foreignkey')
     op.create_foreign_key(None, 'appointments', 'users', ['customer_id'], ['id'])
     op.create_foreign_key(None, 'appointments', 'appointments', ['original_appointment_id'], ['id'])
     if 'scheduled_time' in existing_columns:
@@ -184,7 +187,10 @@ def upgrade() -> None:
                type_=sa.DateTime(timezone=True),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.drop_constraint('invoices_invoice_number_key', 'invoices', type_='unique')
+    # invoices table checks (constraints)
+    invoices_constraints = [con['name'] for con in inspector.get_unique_constraints('invoices')]
+    if 'invoices_invoice_number_key' in invoices_constraints:
+        op.drop_constraint('invoices_invoice_number_key', 'invoices', type_='unique')
     # invoices table checks
     invoices_indexes = [idx['name'] for idx in inspector.get_indexes('invoices')]
     if 'ix_invoices_customer_id' not in invoices_indexes:
@@ -229,7 +235,10 @@ def upgrade() -> None:
         op.create_index(op.f('ix_measurement_profiles_customer_id'), 'measurement_profiles', ['customer_id'], unique=False)
     if 'ix_measurement_profiles_id' not in mp_indexes:
         op.create_index(op.f('ix_measurement_profiles_id'), 'measurement_profiles', ['id'], unique=False)
-    op.drop_constraint('measurement_profiles_user_id_fkey', 'measurement_profiles', type_='foreignkey')
+    # measurement_profiles table checks (constraints)
+    mp_constraints = [con['name'] for con in inspector.get_foreign_keys('measurement_profiles')]
+    if 'measurement_profiles_user_id_fkey' in mp_constraints:
+        op.drop_constraint('measurement_profiles_user_id_fkey', 'measurement_profiles', type_='foreignkey')
     op.create_foreign_key(None, 'measurement_profiles', 'users', ['customer_id'], ['id'])
     op.create_foreign_key(None, 'measurement_profiles', 'users', ['approved_by_id'], ['id'])
     op.drop_column('measurement_profiles', 'user_id')
@@ -286,7 +295,10 @@ def upgrade() -> None:
         op.create_index(op.f('ix_measurement_versions_id'), 'measurement_versions', ['id'], unique=False)
     if 'ix_measurement_versions_profile_id' not in mv_indexes:
         op.create_index(op.f('ix_measurement_versions_profile_id'), 'measurement_versions', ['profile_id'], unique=False)
-    op.drop_constraint('measurement_versions_profile_id_fkey', 'measurement_versions', type_='foreignkey')
+    # measurement_versions table checks (constraints)
+    mv_constraints = [con['name'] for con in inspector.get_foreign_keys('measurement_versions')]
+    if 'measurement_versions_profile_id_fkey' in mv_constraints:
+        op.drop_constraint('measurement_versions_profile_id_fkey', 'measurement_versions', type_='foreignkey')
     op.create_foreign_key(None, 'measurement_versions', 'measurement_profiles', ['profile_id'], ['id'])
     if 'notes' in mv_columns:
         op.drop_column('measurement_versions', 'notes')
@@ -327,7 +339,10 @@ def upgrade() -> None:
                type_=sa.DateTime(timezone=True),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.drop_constraint('orders_order_number_key', 'orders', type_='unique')
+    # orders table checks (constraints)
+    orders_constraints = [con['name'] for con in inspector.get_unique_constraints('orders')]
+    if 'orders_order_number_key' in orders_constraints:
+        op.drop_constraint('orders_order_number_key', 'orders', type_='unique')
     # orders table checks
     orders_indexes = [idx['name'] for idx in inspector.get_indexes('orders')]
     if 'ix_orders_customer_id' not in orders_indexes:
@@ -368,8 +383,12 @@ def upgrade() -> None:
                existing_nullable=False)
     if 'ix_tailor_availability_id' not in ta_indexes:
         op.create_index(op.f('ix_tailor_availability_id'), 'tailor_availability', ['id'], unique=False)
-    op.drop_constraint('tailor_availability_branch_id_fkey', 'tailor_availability', type_='foreignkey')
-    op.drop_constraint('tailor_availability_tailor_id_fkey', 'tailor_availability', type_='foreignkey')
+    # tailor_availability table checks (constraints)
+    ta_constraints = [con['name'] for con in inspector.get_foreign_keys('tailor_availability')]
+    if 'tailor_availability_branch_id_fkey' in ta_constraints:
+        op.drop_constraint('tailor_availability_branch_id_fkey', 'tailor_availability', type_='foreignkey')
+    if 'tailor_availability_tailor_id_fkey' in ta_constraints:
+        op.drop_constraint('tailor_availability_tailor_id_fkey', 'tailor_availability', type_='foreignkey')
     op.create_foreign_key(None, 'tailor_availability', 'users', ['tailor_id'], ['id'])
     op.create_foreign_key(None, 'tailor_availability', 'branches', ['branch_id'], ['id'])
     if 'is_available' in ta_columns:
@@ -416,7 +435,10 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.drop_constraint('users_email_key', 'users', type_='unique')
+    # users table checks (constraints)
+    users_constraints = [con['name'] for con in inspector.get_unique_constraints('users')]
+    if 'users_email_key' in users_constraints:
+        op.drop_constraint('users_email_key', 'users', type_='unique')
     users_indexes = [idx['name'] for idx in inspector.get_indexes('users')]
     if 'ix_users_email' not in users_indexes:
         op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
