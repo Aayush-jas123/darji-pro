@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Clock, Calendar, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import api from '@/lib/api';
 
 interface AvailabilitySetting {
     day_of_week: string;
@@ -58,12 +59,10 @@ export default function AvailabilityPage() {
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tailor/availability`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
+            const response = await api.get('/api/tailor/availability');
 
-            if (response.ok) {
-                const data = await response.json();
+            if (response.status === 200) {
+                const data = response.data;
                 const mergedSchedule = DAYS.map(day => {
                     const existing = data.find((d: any) => d.day_of_week === day.key);
                     return existing || {
@@ -97,21 +96,13 @@ export default function AvailabilityPage() {
             // If strictly needing API:
             if (!token) throw new Error("Not authenticated");
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tailor/availability`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(schedule),
-            });
+            const response = await api.post('/api/tailor/availability', schedule);
 
-            if (response.ok) {
+            if (response.status === 200) {
                 setSuccess('Schedule updated successfully!');
                 setTimeout(() => setSuccess(''), 3000);
             } else {
-                const data = await response.json();
-                throw new Error(data.detail || 'Failed to update schedule');
+                throw new Error(response.data?.detail || 'Failed to update schedule');
             }
         } catch (err: any) {
             // Visualize success even if API fails for UI demo

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 interface RevenueReport {
     period_days: number;
@@ -39,29 +40,17 @@ export default function AdvancedAnalytics() {
             }
 
             // Fetch revenue report
-            const revenueResponse = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/analytics/revenue?days=30`,
-                {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }
-            );
+            const revenueResponse = await api.get('/api/analytics/revenue?days=30');
 
-            if (revenueResponse.ok) {
-                const revenueData = await revenueResponse.json();
-                setRevenue(revenueData);
+            if (revenueResponse.status === 200) {
+                setRevenue(revenueResponse.data);
             }
 
             // Fetch tailor performance
-            const tailorResponse = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/analytics/tailor-performance`,
-                {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }
-            );
+            const tailorResponse = await api.get('/api/analytics/tailor-performance');
 
-            if (tailorResponse.ok) {
-                const tailorData = await tailorResponse.json();
-                setTailors(tailorData);
+            if (tailorResponse.status === 200) {
+                setTailors(tailorResponse.data);
             }
         } catch (err) {
             console.error(err);

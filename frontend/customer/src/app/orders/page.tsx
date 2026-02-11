@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/Button';
+import api from '@/lib/api';
 
 interface Order {
     id: number;
@@ -80,16 +81,10 @@ export default function CustomerOrders() {
                 return;
             }
 
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/orders`,
-                {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }
-            );
+            const response = await api.get('/api/orders');
 
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
+            if (response.status === 200) {
+                setOrders(response.data);
             }
         } catch (err) {
             console.error(err);
@@ -219,7 +214,6 @@ export default function CustomerOrders() {
                                                 {/* Mobile Steps (Vertical or simplified) */}
                                                 <div className="md:hidden flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                                        <info className="w-5 h-5" /> {/* Use current step icon */}
                                                         {(() => {
                                                             const CurrentIcon = ORDER_STEPS[activeIndex]?.icon || Info;
                                                             return <CurrentIcon className="w-5 h-5" />;

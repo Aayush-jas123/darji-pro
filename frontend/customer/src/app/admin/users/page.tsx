@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, Users, UserCheck, UserX, Filter } from 'lucide-react';
+import api from '@/lib/api';
 
 interface User {
     id: number;
@@ -36,28 +37,23 @@ export default function AdminUsers() {
                 return;
             }
 
-            let url = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users?limit=100`;
+            let url = `/api/admin/users?limit=100`;
             if (roleFilter) url += `&role=${roleFilter}`;
             if (statusFilter) url += `&is_active=${statusFilter}`;
             if (searchTerm) url += `&search=${searchTerm}`;
 
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+            const response = await api.get(url);
 
             if (response.status === 403) {
                 setError('Access denied. Admin privileges required.');
                 return;
             }
 
-            if (!response.ok) {
+            if (response.status !== 200) {
                 throw new Error('Failed to fetch users');
             }
 
-            const data = await response.json();
-            setUsers(data);
+            setUsers(response.data);
         } catch (err) {
             setError('Failed to load users');
             console.error(err);
@@ -69,17 +65,9 @@ export default function AdminUsers() {
     const toggleUserActive = async (userId: number) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/toggle-active`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                }
-            );
+            const response = await api.patch(`/api/admin/users/${userId}/toggle-active`);
 
-            if (!response.ok) {
+            if (response.status !== 200) {
                 throw new Error('Failed to toggle user status');
             }
 
@@ -311,8 +299,8 @@ export default function AdminUsers() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_active
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                                                 }`}>
                                                 {user.is_active ? 'Active' : 'Inactive'}
                                             </span>
@@ -324,8 +312,8 @@ export default function AdminUsers() {
                                             <button
                                                 onClick={() => toggleUserActive(user.id)}
                                                 className={`px-4 py-2 rounded-lg transition-colors ${user.is_active
-                                                        ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
-                                                        : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50'
+                                                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
+                                                    : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50'
                                                     }`}
                                             >
                                                 {user.is_active ? 'Deactivate' : 'Activate'}

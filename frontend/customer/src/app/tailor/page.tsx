@@ -14,6 +14,7 @@ import {
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { RoleGuard } from '@/components/RoleGuard';
+import api from '@/lib/api';
 
 function TailorDashboardContent() {
     const router = useRouter();
@@ -40,15 +41,13 @@ function TailorDashboardContent() {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const headers = { 'Authorization': `Bearer ${token}` };
-
             // Fetch Appointments
-            const apptRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/appointments`, { headers });
-            const appointments = await apptRes.json();
+            const apptRes = await api.get('/api/appointments');
+            const appointments = apptRes.data;
 
             // Fetch Orders
-            const orderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`, { headers });
-            const orders = await orderRes.json();
+            const orderRes = await api.get('/api/orders');
+            const orders = orderRes.data;
 
             // Process Data
             const today = new Date().toISOString().split('T')[0];

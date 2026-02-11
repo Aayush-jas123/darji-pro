@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 interface Invoice {
     id: number;
@@ -36,16 +37,10 @@ export default function CustomerInvoices() {
                 return;
             }
 
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/invoices`,
-                {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }
-            );
+            const response = await api.get('/api/invoices');
 
-            if (response.ok) {
-                const data = await response.json();
-                setInvoices(data);
+            if (response.status === 200) {
+                setInvoices(response.data);
             }
         } catch (err) {
             console.error(err);

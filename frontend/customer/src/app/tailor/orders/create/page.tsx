@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import api from '@/lib/api';
 
 function CreateOrderContent() {
     const router = useRouter();
@@ -49,22 +50,8 @@ function CreateOrderContent() {
                 estimated_delivery: formData.estimated_delivery ? new Date(formData.estimated_delivery).toISOString() : null,
             };
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                router.push('/tailor'); // Or to order details if we had that view for tailor
-            } else {
-                const data = await response.json();
-                throw new Error(data.detail || 'Failed to create order');
-            }
+            const response = await api.post('/api/orders/', payload);
+            router.push('/tailor');
         } catch (err: any) {
             console.error(err);
             setError(err.message);

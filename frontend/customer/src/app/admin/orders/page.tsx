@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 interface Order {
     id: number;
@@ -34,16 +35,13 @@ export default function AdminOrders() {
                 return;
             }
 
-            let url = `${process.env.NEXT_PUBLIC_API_URL}/api/orders?limit=100`;
+            let url = `/api/orders?limit=100`;
             if (statusFilter) url += `&status=${statusFilter}`;
 
-            const response = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
+            const response = await api.get(url);
 
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
+            if (response.status === 200) {
+                setOrders(response.data);
             }
         } catch (err) {
             console.error(err);

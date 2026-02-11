@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
+import api from '@/lib/api';
 
 export default function TailorAppointments() {
     const router = useRouter();
@@ -36,13 +37,10 @@ export default function TailorAppointments() {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/appointments`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await api.get('/api/appointments');
 
-            if (response.ok) {
-                const data = await response.json();
-                setAppointments(data);
+            if (response.status === 200) {
+                setAppointments(response.data);
             }
         } catch (error) {
             console.error(error);

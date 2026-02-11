@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 import { RoleGuard } from '@/components/RoleGuard';
 
 interface DashboardStats {
@@ -45,23 +46,18 @@ function AdminDashboardContent() {
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/stats`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+            const response = await api.get('/api/admin/stats');
 
             if (response.status === 403) {
                 setError('Access denied. Admin privileges required.');
                 return;
             }
 
-            if (!response.ok) {
+            if (response.status !== 200) {
                 throw new Error('Failed to fetch stats');
             }
 
-            const data = await response.json();
-            setStats(data);
+            setStats(response.data);
         } catch (err) {
             setError('Failed to load dashboard data');
             console.error(err);
