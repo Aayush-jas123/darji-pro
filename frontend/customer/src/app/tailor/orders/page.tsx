@@ -32,7 +32,7 @@ export default function TailorOrders() {
 
     const fetchOrders = async () => {
         try {
-            const response = await api.get('/orders');
+            const response = await api.get('/api/orders');
             setOrders(response.data);
         } catch (error) {
             console.error('Failed to fetch orders:', error);

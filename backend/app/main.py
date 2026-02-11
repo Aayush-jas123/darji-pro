@@ -25,7 +25,9 @@ async def lifespan(app: FastAPI):
     print(f"📊 Environment: {settings.ENVIRONMENT}")
     print(f"🔒 Debug Mode: {settings.DEBUG}")
     
-    # Run database migrations on startup
+    # Run database migrations on startup - DISABLED (Handled in build step)
+    # This prevents startup timeouts on Render
+    """
     if settings.ENVIRONMENT == "production":
         import os
         try:
@@ -47,17 +49,18 @@ async def lifespan(app: FastAPI):
                 
                 if os.path.exists(alembic_ini_path):
                     alembic_cfg = Config(alembic_ini_path)
-                    command.upgrade(alembic_cfg, "head")
-                    print("✅ Database migrations completed successfully!")
+                    # command.upgrade(alembic_cfg, "head") # Disabled to prevent hang
+                    print("✅ Skipped startup migration (handled in build)")
                 else:
                     print(f"⚠️ Could not find alembic.ini in {cwd}, skipping auto-migration.")
             finally:
                 os.chdir(original_cwd)
                 
         except Exception as e:
-            print(f"❌ Database migration failed on startup: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"❌ Database migration check failed on startup: {e}")
+            # Don't fail startup for this
+            pass
+    """
     
     yield
     

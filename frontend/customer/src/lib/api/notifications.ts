@@ -36,7 +36,7 @@ export async function getNotifications(token?: string, unreadOnly: boolean = fal
         const params = new URLSearchParams();
         if (unreadOnly) params.append('unread_only', 'true');
 
-        const response = await api.get(`/notifications?${params.toString()}`);
+        const response = await api.get(`/api/notifications?${params.toString()}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -49,7 +49,7 @@ export async function getNotifications(token?: string, unreadOnly: boolean = fal
  */
 export async function getUnreadCount(token?: string): Promise<number> {
     try {
-        const response = await api.get('/notifications/unread-count');
+        const response = await api.get('/api/notifications/unread-count');
         return response.data.unread_count;
     } catch (error) {
         console.error('Error fetching unread count:', error);
@@ -62,7 +62,7 @@ export async function getUnreadCount(token?: string): Promise<number> {
  */
 export async function getNotificationStats(token?: string): Promise<NotificationStats> {
     try {
-        const response = await api.get('/notifications/stats');
+        const response = await api.get('/api/notifications/stats');
         return response.data;
     } catch (error) {
         console.error('Error fetching notification stats:', error);
@@ -75,7 +75,7 @@ export async function getNotificationStats(token?: string): Promise<Notification
  */
 export async function markAsRead(token: string, notificationId: number): Promise<Notification> {
     try {
-        const response = await api.patch(`/notifications/${notificationId}/read`);
+        const response = await api.patch(`/api/notifications/${notificationId}/read`);
         return response.data;
     } catch (error) {
         console.error('Error marking notification as read:', error);
@@ -88,7 +88,7 @@ export async function markAsRead(token: string, notificationId: number): Promise
  */
 export async function markAllAsRead(token?: string): Promise<void> {
     try {
-        await api.post('/notifications/mark-all-read');
+        await api.post('/api/notifications/mark-all-read');
     } catch (error) {
         console.error('Error marking all as read:', error);
         throw error;
@@ -100,7 +100,7 @@ export async function markAllAsRead(token?: string): Promise<void> {
  */
 export async function deleteNotification(token: string, notificationId: number): Promise<void> {
     try {
-        await api.delete(`/notifications/${notificationId}`);
+        await api.delete(`/api/notifications/${notificationId}`);
     } catch (error) {
         console.error('Error deleting notification:', error);
         throw error;
@@ -112,7 +112,7 @@ export async function deleteNotification(token: string, notificationId: number):
  */
 export async function deleteAllNotifications(token?: string): Promise<void> {
     try {
-        await api.delete('/notifications');
+        await api.delete('/api/notifications');
     } catch (error) {
         console.error('Error deleting all notifications:', error);
         throw error;
