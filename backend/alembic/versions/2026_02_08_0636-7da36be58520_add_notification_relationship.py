@@ -24,6 +24,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
     existing_columns = [col['name'] for col in inspector.get_columns('appointments')]
+    existing_indexes = [idx['name'] for idx in inspector.get_indexes('appointments')]
 
     if 'appointment_type' not in existing_columns:
         op.add_column('appointments', sa.Column('appointment_type', sa.String(length=50), nullable=True))
@@ -76,12 +77,18 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.create_index(op.f('ix_appointments_branch_id'), 'appointments', ['branch_id'], unique=False)
-    op.create_index(op.f('ix_appointments_customer_id'), 'appointments', ['customer_id'], unique=False)
-    op.create_index(op.f('ix_appointments_id'), 'appointments', ['id'], unique=False)
-    op.create_index(op.f('ix_appointments_scheduled_date'), 'appointments', ['scheduled_date'], unique=False)
-    op.create_index(op.f('ix_appointments_status'), 'appointments', ['status'], unique=False)
-    op.create_index(op.f('ix_appointments_tailor_id'), 'appointments', ['tailor_id'], unique=False)
+    if 'ix_appointments_branch_id' not in existing_indexes:
+        op.create_index(op.f('ix_appointments_branch_id'), 'appointments', ['branch_id'], unique=False)
+    if 'ix_appointments_customer_id' not in existing_indexes:
+        op.create_index(op.f('ix_appointments_customer_id'), 'appointments', ['customer_id'], unique=False)
+    if 'ix_appointments_id' not in existing_indexes:
+        op.create_index(op.f('ix_appointments_id'), 'appointments', ['id'], unique=False)
+    if 'ix_appointments_scheduled_date' not in existing_indexes:
+        op.create_index(op.f('ix_appointments_scheduled_date'), 'appointments', ['scheduled_date'], unique=False)
+    if 'ix_appointments_status' not in existing_indexes:
+        op.create_index(op.f('ix_appointments_status'), 'appointments', ['status'], unique=False)
+    if 'ix_appointments_tailor_id' not in existing_indexes:
+        op.create_index(op.f('ix_appointments_tailor_id'), 'appointments', ['tailor_id'], unique=False)
     op.drop_constraint('appointments_customer_id_fkey', 'appointments', type_='foreignkey')
     op.create_foreign_key(None, 'appointments', 'users', ['customer_id'], ['id'])
     op.create_foreign_key(None, 'appointments', 'appointments', ['original_appointment_id'], ['id'])
@@ -89,7 +96,12 @@ def upgrade() -> None:
     op.drop_column('appointments', 'notes')
     op.drop_column('appointments', 'service_type')
     op.create_foreign_key(None, 'audit_logs', 'users', ['user_id'], ['id'])
-    op.add_column('branches', sa.Column('code', sa.String(length=50), nullable=True))
+    # branches table checks
+    branches_columns = [col['name'] for col in inspector.get_columns('branches')]
+    branches_indexes = [idx['name'] for idx in inspector.get_indexes('branches')]
+
+    if 'code' not in branches_columns:
+        op.add_column('branches', sa.Column('code', sa.String(length=50), nullable=True))
     op.alter_column('branches', 'is_active',
                existing_type=sa.BOOLEAN(),
                nullable=False,
@@ -102,17 +114,28 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.create_index(op.f('ix_branches_code'), 'branches', ['code'], unique=True)
-    op.create_index(op.f('ix_branches_id'), 'branches', ['id'], unique=False)
+    
+    if 'ix_branches_code' not in branches_indexes:
+        op.create_index(op.f('ix_branches_code'), 'branches', ['code'], unique=True)
+    if 'ix_branches_id' not in branches_indexes:
+        op.create_index(op.f('ix_branches_id'), 'branches', ['id'], unique=False)
     op.alter_column('fabrics', 'in_stock',
                existing_type=sa.BOOLEAN(),
                nullable=False,
                existing_server_default=sa.text('true'))
-    op.drop_index('idx_fabrics_color', table_name='fabrics')
-    op.drop_index('idx_fabrics_type', table_name='fabrics')
-    op.create_index(op.f('ix_fabrics_color'), 'fabrics', ['color'], unique=False)
-    op.create_index(op.f('ix_fabrics_id'), 'fabrics', ['id'], unique=False)
-    op.create_index(op.f('ix_fabrics_type'), 'fabrics', ['type'], unique=False)
+    # fabrics table checks
+    fabrics_indexes = [idx['name'] for idx in inspector.get_indexes('fabrics')]
+    if 'idx_fabrics_color' in fabrics_indexes:
+        op.drop_index('idx_fabrics_color', table_name='fabrics')
+    if 'idx_fabrics_type' in fabrics_indexes:
+        op.drop_index('idx_fabrics_type', table_name='fabrics')
+        
+    if 'ix_fabrics_color' not in fabrics_indexes:
+        op.create_index(op.f('ix_fabrics_color'), 'fabrics', ['color'], unique=False)
+    if 'ix_fabrics_id' not in fabrics_indexes:
+        op.create_index(op.f('ix_fabrics_id'), 'fabrics', ['id'], unique=False)
+    if 'ix_fabrics_type' not in fabrics_indexes:
+        op.create_index(op.f('ix_fabrics_type'), 'fabrics', ['type'], unique=False)
     op.alter_column('invoices', 'order_id',
                existing_type=sa.INTEGER(),
                nullable=False)
@@ -159,17 +182,34 @@ def upgrade() -> None:
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
     op.drop_constraint('invoices_invoice_number_key', 'invoices', type_='unique')
-    op.create_index(op.f('ix_invoices_customer_id'), 'invoices', ['customer_id'], unique=False)
-    op.create_index(op.f('ix_invoices_id'), 'invoices', ['id'], unique=False)
-    op.create_index(op.f('ix_invoices_invoice_number'), 'invoices', ['invoice_number'], unique=True)
-    op.create_index(op.f('ix_invoices_order_id'), 'invoices', ['order_id'], unique=False)
-    op.create_index(op.f('ix_invoices_status'), 'invoices', ['status'], unique=False)
-    op.add_column('measurement_profiles', sa.Column('customer_id', sa.Integer(), nullable=False))
-    op.add_column('measurement_profiles', sa.Column('current_version', sa.Integer(), nullable=False))
-    op.add_column('measurement_profiles', sa.Column('status', sa.String(length=50), nullable=False))
-    op.add_column('measurement_profiles', sa.Column('approved_by_id', sa.Integer(), nullable=True))
-    op.add_column('measurement_profiles', sa.Column('approved_at', sa.DateTime(), nullable=True))
-    op.add_column('measurement_profiles', sa.Column('rejection_reason', sa.Text(), nullable=True))
+    # invoices table checks
+    invoices_indexes = [idx['name'] for idx in inspector.get_indexes('invoices')]
+    if 'ix_invoices_customer_id' not in invoices_indexes:
+        op.create_index(op.f('ix_invoices_customer_id'), 'invoices', ['customer_id'], unique=False)
+    if 'ix_invoices_id' not in invoices_indexes:
+        op.create_index(op.f('ix_invoices_id'), 'invoices', ['id'], unique=False)
+    if 'ix_invoices_invoice_number' not in invoices_indexes:
+        op.create_index(op.f('ix_invoices_invoice_number'), 'invoices', ['invoice_number'], unique=True)
+    if 'ix_invoices_order_id' not in invoices_indexes:
+        op.create_index(op.f('ix_invoices_order_id'), 'invoices', ['order_id'], unique=False)
+    if 'ix_invoices_status' not in invoices_indexes:
+        op.create_index(op.f('ix_invoices_status'), 'invoices', ['status'], unique=False)
+    # measurement_profiles table checks
+    mp_columns = [col['name'] for col in inspector.get_columns('measurement_profiles')]
+    mp_indexes = [idx['name'] for idx in inspector.get_indexes('measurement_profiles')]
+
+    if 'customer_id' not in mp_columns:
+        op.add_column('measurement_profiles', sa.Column('customer_id', sa.Integer(), nullable=False))
+    if 'current_version' not in mp_columns:
+        op.add_column('measurement_profiles', sa.Column('current_version', sa.Integer(), nullable=False))
+    if 'status' not in mp_columns:
+        op.add_column('measurement_profiles', sa.Column('status', sa.String(length=50), nullable=False))
+    if 'approved_by_id' not in mp_columns:
+        op.add_column('measurement_profiles', sa.Column('approved_by_id', sa.Integer(), nullable=True))
+    if 'approved_at' not in mp_columns:
+        op.add_column('measurement_profiles', sa.Column('approved_at', sa.DateTime(), nullable=True))
+    if 'rejection_reason' not in mp_columns:
+        op.add_column('measurement_profiles', sa.Column('rejection_reason', sa.Text(), nullable=True))
     op.alter_column('measurement_profiles', 'is_default',
                existing_type=sa.BOOLEAN(),
                nullable=False,
@@ -182,29 +222,53 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.create_index(op.f('ix_measurement_profiles_customer_id'), 'measurement_profiles', ['customer_id'], unique=False)
-    op.create_index(op.f('ix_measurement_profiles_id'), 'measurement_profiles', ['id'], unique=False)
+    if 'ix_measurement_profiles_customer_id' not in mp_indexes:
+        op.create_index(op.f('ix_measurement_profiles_customer_id'), 'measurement_profiles', ['customer_id'], unique=False)
+    if 'ix_measurement_profiles_id' not in mp_indexes:
+        op.create_index(op.f('ix_measurement_profiles_id'), 'measurement_profiles', ['id'], unique=False)
     op.drop_constraint('measurement_profiles_user_id_fkey', 'measurement_profiles', type_='foreignkey')
     op.create_foreign_key(None, 'measurement_profiles', 'users', ['customer_id'], ['id'])
     op.create_foreign_key(None, 'measurement_profiles', 'users', ['approved_by_id'], ['id'])
     op.drop_column('measurement_profiles', 'user_id')
-    op.add_column('measurement_versions', sa.Column('shoulder', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('hip', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('arm_length', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('bicep', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('wrist', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('outseam', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('thigh', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('knee', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('calf', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('ankle', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('back_length', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('front_length', sa.Float(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('additional_measurements', sa.JSON(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('posture_notes', sa.Text(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('special_requirements', sa.Text(), nullable=True))
-    op.add_column('measurement_versions', sa.Column('measurement_method', sa.String(length=50), nullable=False))
-    op.add_column('measurement_versions', sa.Column('change_notes', sa.Text(), nullable=True))
+    # measurement_versions table checks
+    mv_columns = [col['name'] for col in inspector.get_columns('measurement_versions')]
+    mv_indexes = [idx['name'] for idx in inspector.get_indexes('measurement_versions')]
+
+    if 'shoulder' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('shoulder', sa.Float(), nullable=True))
+    if 'hip' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('hip', sa.Float(), nullable=True))
+    if 'arm_length' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('arm_length', sa.Float(), nullable=True))
+    if 'bicep' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('bicep', sa.Float(), nullable=True))
+    if 'wrist' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('wrist', sa.Float(), nullable=True))
+    if 'outseam' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('outseam', sa.Float(), nullable=True))
+    if 'thigh' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('thigh', sa.Float(), nullable=True))
+    if 'knee' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('knee', sa.Float(), nullable=True))
+    if 'calf' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('calf', sa.Float(), nullable=True))
+    if 'ankle' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('ankle', sa.Float(), nullable=True))
+    if 'back_length' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('back_length', sa.Float(), nullable=True))
+    if 'front_length' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('front_length', sa.Float(), nullable=True))
+    if 'additional_measurements' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('additional_measurements', sa.JSON(), nullable=True))
+    if 'posture_notes' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('posture_notes', sa.Text(), nullable=True))
+    if 'special_requirements' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('special_requirements', sa.Text(), nullable=True))
+    if 'measurement_method' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('measurement_method', sa.String(length=50), nullable=False))
+        # Ensure change_notes column exists before adding it
+    if 'change_notes' not in mv_columns:
+        op.add_column('measurement_versions', sa.Column('change_notes', sa.Text(), nullable=True))
     op.alter_column('measurement_versions', 'profile_id',
                existing_type=sa.INTEGER(),
                nullable=False)
@@ -215,8 +279,10 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
-    op.create_index(op.f('ix_measurement_versions_id'), 'measurement_versions', ['id'], unique=False)
-    op.create_index(op.f('ix_measurement_versions_profile_id'), 'measurement_versions', ['profile_id'], unique=False)
+    if 'ix_measurement_versions_id' not in mv_indexes:
+        op.create_index(op.f('ix_measurement_versions_id'), 'measurement_versions', ['id'], unique=False)
+    if 'ix_measurement_versions_profile_id' not in mv_indexes:
+        op.create_index(op.f('ix_measurement_versions_profile_id'), 'measurement_versions', ['profile_id'], unique=False)
     op.drop_constraint('measurement_versions_profile_id_fkey', 'measurement_versions', type_='foreignkey')
     op.create_foreign_key(None, 'measurement_versions', 'measurement_profiles', ['profile_id'], ['id'])
     op.drop_column('measurement_versions', 'notes')
@@ -254,17 +320,34 @@ def upgrade() -> None:
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
     op.drop_constraint('orders_order_number_key', 'orders', type_='unique')
-    op.create_index(op.f('ix_orders_customer_id'), 'orders', ['customer_id'], unique=False)
-    op.create_index(op.f('ix_orders_id'), 'orders', ['id'], unique=False)
-    op.create_index(op.f('ix_orders_order_number'), 'orders', ['order_number'], unique=True)
-    op.create_index(op.f('ix_orders_status'), 'orders', ['status'], unique=False)
-    op.create_index(op.f('ix_orders_tailor_id'), 'orders', ['tailor_id'], unique=False)
-    op.add_column('tailor_availability', sa.Column('slot_duration_minutes', sa.Integer(), nullable=False))
-    op.add_column('tailor_availability', sa.Column('buffer_time_minutes', sa.Integer(), nullable=False))
-    op.add_column('tailor_availability', sa.Column('max_appointments_per_day', sa.Integer(), nullable=True))
-    op.add_column('tailor_availability', sa.Column('is_active', sa.Boolean(), nullable=False))
-    op.add_column('tailor_availability', sa.Column('created_at', sa.DateTime(), nullable=False))
-    op.add_column('tailor_availability', sa.Column('updated_at', sa.DateTime(), nullable=False))
+    # orders table checks
+    orders_indexes = [idx['name'] for idx in inspector.get_indexes('orders')]
+    if 'ix_orders_customer_id' not in orders_indexes:
+        op.create_index(op.f('ix_orders_customer_id'), 'orders', ['customer_id'], unique=False)
+    if 'ix_orders_id' not in orders_indexes:
+        op.create_index(op.f('ix_orders_id'), 'orders', ['id'], unique=False)
+    if 'ix_orders_order_number' not in orders_indexes:
+        op.create_index(op.f('ix_orders_order_number'), 'orders', ['order_number'], unique=True)
+    if 'ix_orders_status' not in orders_indexes:
+        op.create_index(op.f('ix_orders_status'), 'orders', ['status'], unique=False)
+    if 'ix_orders_tailor_id' not in orders_indexes:
+        op.create_index(op.f('ix_orders_tailor_id'), 'orders', ['tailor_id'], unique=False)
+    # tailor_availability table checks
+    ta_columns = [col['name'] for col in inspector.get_columns('tailor_availability')]
+    ta_indexes = [idx['name'] for idx in inspector.get_indexes('tailor_availability')]
+
+    if 'slot_duration_minutes' not in ta_columns:
+        op.add_column('tailor_availability', sa.Column('slot_duration_minutes', sa.Integer(), nullable=False))
+    if 'buffer_time_minutes' not in ta_columns:
+        op.add_column('tailor_availability', sa.Column('buffer_time_minutes', sa.Integer(), nullable=False))
+    if 'max_appointments_per_day' not in ta_columns:
+        op.add_column('tailor_availability', sa.Column('max_appointments_per_day', sa.Integer(), nullable=True))
+    if 'is_active' not in ta_columns:
+        op.add_column('tailor_availability', sa.Column('is_active', sa.Boolean(), nullable=False))
+    if 'created_at' not in ta_columns:
+        op.add_column('tailor_availability', sa.Column('created_at', sa.DateTime(), nullable=False))
+    if 'updated_at' not in ta_columns:
+        op.add_column('tailor_availability', sa.Column('updated_at', sa.DateTime(), nullable=False))
     op.alter_column('tailor_availability', 'tailor_id',
                existing_type=sa.INTEGER(),
                nullable=False)
@@ -275,22 +358,35 @@ def upgrade() -> None:
                existing_type=sa.INTEGER(),
                type_=sa.String(length=20),
                existing_nullable=False)
-    op.create_index(op.f('ix_tailor_availability_id'), 'tailor_availability', ['id'], unique=False)
+    if 'ix_tailor_availability_id' not in ta_indexes:
+        op.create_index(op.f('ix_tailor_availability_id'), 'tailor_availability', ['id'], unique=False)
     op.drop_constraint('tailor_availability_branch_id_fkey', 'tailor_availability', type_='foreignkey')
     op.drop_constraint('tailor_availability_tailor_id_fkey', 'tailor_availability', type_='foreignkey')
     op.create_foreign_key(None, 'tailor_availability', 'users', ['tailor_id'], ['id'])
     op.create_foreign_key(None, 'tailor_availability', 'branches', ['branch_id'], ['id'])
     op.drop_column('tailor_availability', 'is_available')
-    op.add_column('users', sa.Column('account_status', sa.String(length=20), server_default='active', nullable=False))
-    op.add_column('users', sa.Column('email_verified', sa.Boolean(), server_default='false', nullable=False))
-    op.add_column('users', sa.Column('email_verification_token', sa.String(length=255), nullable=True))
-    op.add_column('users', sa.Column('email_verification_sent_at', sa.DateTime(), nullable=True))
-    op.add_column('users', sa.Column('approval_notes', sa.String(), nullable=True))
-    op.add_column('users', sa.Column('approved_by_id', sa.Integer(), nullable=True))
-    op.add_column('users', sa.Column('approved_at', sa.DateTime(), nullable=True))
-    op.add_column('users', sa.Column('experience_years', sa.Integer(), nullable=True))
-    op.add_column('users', sa.Column('specialization', sa.String(length=500), nullable=True))
-    op.add_column('users', sa.Column('bio', sa.String(), nullable=True))
+    # users table checks
+    users_columns = [col['name'] for col in inspector.get_columns('users')]
+    if 'account_status' not in users_columns:
+        op.add_column('users', sa.Column('account_status', sa.String(length=20), server_default='active', nullable=False))
+    if 'email_verified' not in users_columns:
+        op.add_column('users', sa.Column('email_verified', sa.Boolean(), server_default='false', nullable=False))
+    if 'email_verification_token' not in users_columns:
+        op.add_column('users', sa.Column('email_verification_token', sa.String(length=255), nullable=True))
+    if 'email_verification_sent_at' not in users_columns:
+        op.add_column('users', sa.Column('email_verification_sent_at', sa.DateTime(), nullable=True))
+    if 'approval_notes' not in users_columns:
+        op.add_column('users', sa.Column('approval_notes', sa.String(), nullable=True))
+    if 'approved_by_id' not in users_columns:
+        op.add_column('users', sa.Column('approved_by_id', sa.Integer(), nullable=True))
+    if 'approved_at' not in users_columns:
+        op.add_column('users', sa.Column('approved_at', sa.DateTime(), nullable=True))
+    if 'experience_years' not in users_columns:
+        op.add_column('users', sa.Column('experience_years', sa.Integer(), nullable=True))
+    if 'specialization' not in users_columns:
+        op.add_column('users', sa.Column('specialization', sa.String(length=500), nullable=True))
+    if 'bio' not in users_columns:
+        op.add_column('users', sa.Column('bio', sa.String(), nullable=True))
     op.alter_column('users', 'is_active',
                existing_type=sa.BOOLEAN(),
                nullable=False,
@@ -312,9 +408,13 @@ def upgrade() -> None:
                nullable=False,
                existing_server_default=sa.text('CURRENT_TIMESTAMP'))
     op.drop_constraint('users_email_key', 'users', type_='unique')
-    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
-    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
-    op.create_index(op.f('ix_users_phone'), 'users', ['phone'], unique=True)
+    users_indexes = [idx['name'] for idx in inspector.get_indexes('users')]
+    if 'ix_users_email' not in users_indexes:
+        op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    if 'ix_users_id' not in users_indexes:
+        op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
+    if 'ix_users_phone' not in users_indexes:
+        op.create_index(op.f('ix_users_phone'), 'users', ['phone'], unique=True)
     op.create_unique_constraint(None, 'users', ['google_id'])
     op.create_unique_constraint(None, 'users', ['facebook_id'])
     # ### end Alembic commands ###
@@ -526,11 +626,14 @@ def downgrade() -> None:
     op.alter_column('invoices', 'order_id',
                existing_type=sa.INTEGER(),
                nullable=True)
-    op.drop_index(op.f('ix_fabrics_type'), table_name='fabrics')
-    op.drop_index(op.f('ix_fabrics_id'), table_name='fabrics')
-    op.drop_index(op.f('ix_fabrics_color'), table_name='fabrics')
-    op.create_index('idx_fabrics_type', 'fabrics', ['type'], unique=False)
-    op.create_index('idx_fabrics_color', 'fabrics', ['color'], unique=False)
+    op.drop_index(op.f('ix_fabrics_type'), table_name='fabrics', if_exists=True)
+    op.drop_index(op.f('ix_fabrics_id'), table_name='fabrics', if_exists=True)
+    op.drop_index(op.f('ix_fabrics_color'), table_name='fabrics', if_exists=True)
+    
+    # Check if idx_ indexes exist (refresh inspector or just use if_not_exists if available, but simplest is try/except or assume dropped correctly above)
+    # Since we wrapped the initial drops, they should be gone.
+    op.create_index('idx_fabrics_type', 'fabrics', ['type'], unique=False, if_not_exists=True)
+    op.create_index('idx_fabrics_color', 'fabrics', ['color'], unique=False, if_not_exists=True)
     op.alter_column('fabrics', 'in_stock',
                existing_type=sa.BOOLEAN(),
                nullable=True,
@@ -551,9 +654,12 @@ def downgrade() -> None:
                existing_server_default=sa.text('true'))
     op.drop_column('branches', 'code')
     op.drop_constraint(None, 'audit_logs', type_='foreignkey')
-    op.add_column('appointments', sa.Column('service_type', sa.VARCHAR(length=100), autoincrement=False, nullable=False))
-    op.add_column('appointments', sa.Column('notes', sa.TEXT(), autoincrement=False, nullable=True))
-    op.add_column('appointments', sa.Column('scheduled_time', postgresql.TIMESTAMP(), autoincrement=False, nullable=False))
+    if 'service_type' not in existing_columns:
+        op.add_column('appointments', sa.Column('service_type', sa.VARCHAR(length=100), autoincrement=False, nullable=False))
+    if 'notes' not in existing_columns:
+        op.add_column('appointments', sa.Column('notes', sa.TEXT(), autoincrement=False, nullable=True))
+    if 'scheduled_time' not in existing_columns:
+        op.add_column('appointments', sa.Column('scheduled_time', postgresql.TIMESTAMP(), autoincrement=False, nullable=False))
     op.drop_constraint(None, 'appointments', type_='foreignkey')
     op.drop_constraint(None, 'appointments', type_='foreignkey')
     op.create_foreign_key('appointments_customer_id_fkey', 'appointments', 'users', ['customer_id'], ['id'], ondelete='CASCADE')
