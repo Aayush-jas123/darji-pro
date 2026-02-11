@@ -3,9 +3,7 @@
  * Handles all notification-related API calls
  */
 
-import axios from 'axios';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import api from '@/lib/api';
 
 export interface Notification {
     id: number;
@@ -33,14 +31,12 @@ export interface NotificationStats {
 /**
  * Fetch all notifications for the current user
  */
-export async function getNotifications(token: string, unreadOnly: boolean = false): Promise<Notification[]> {
+export async function getNotifications(token?: string, unreadOnly: boolean = false): Promise<Notification[]> {
     try {
         const params = new URLSearchParams();
         if (unreadOnly) params.append('unread_only', 'true');
 
-        const response = await axios.get(`${API_BASE_URL}/api/notifications?${params.toString()}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get(`/notifications?${params.toString()}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -51,11 +47,9 @@ export async function getNotifications(token: string, unreadOnly: boolean = fals
 /**
  * Get unread notification count
  */
-export async function getUnreadCount(token: string): Promise<number> {
+export async function getUnreadCount(token?: string): Promise<number> {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/notifications/unread-count`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get('/notifications/unread-count');
         return response.data.unread_count;
     } catch (error) {
         console.error('Error fetching unread count:', error);
@@ -66,11 +60,9 @@ export async function getUnreadCount(token: string): Promise<number> {
 /**
  * Get notification statistics
  */
-export async function getNotificationStats(token: string): Promise<NotificationStats> {
+export async function getNotificationStats(token?: string): Promise<NotificationStats> {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/notifications/stats`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get('/notifications/stats');
         return response.data;
     } catch (error) {
         console.error('Error fetching notification stats:', error);
@@ -83,11 +75,7 @@ export async function getNotificationStats(token: string): Promise<NotificationS
  */
 export async function markAsRead(token: string, notificationId: number): Promise<Notification> {
     try {
-        const response = await axios.patch(
-            `${API_BASE_URL}/api/notifications/${notificationId}/read`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await api.patch(`/notifications/${notificationId}/read`);
         return response.data;
     } catch (error) {
         console.error('Error marking notification as read:', error);
@@ -98,13 +86,9 @@ export async function markAsRead(token: string, notificationId: number): Promise
 /**
  * Mark all notifications as read
  */
-export async function markAllAsRead(token: string): Promise<void> {
+export async function markAllAsRead(token?: string): Promise<void> {
     try {
-        await axios.post(
-            `${API_BASE_URL}/api/notifications/mark-all-read`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.post('/notifications/mark-all-read');
     } catch (error) {
         console.error('Error marking all as read:', error);
         throw error;
@@ -116,9 +100,7 @@ export async function markAllAsRead(token: string): Promise<void> {
  */
 export async function deleteNotification(token: string, notificationId: number): Promise<void> {
     try {
-        await axios.delete(`${API_BASE_URL}/api/notifications/${notificationId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/notifications/${notificationId}`);
     } catch (error) {
         console.error('Error deleting notification:', error);
         throw error;
@@ -128,11 +110,9 @@ export async function deleteNotification(token: string, notificationId: number):
 /**
  * Delete all notifications
  */
-export async function deleteAllNotifications(token: string): Promise<void> {
+export async function deleteAllNotifications(token?: string): Promise<void> {
     try {
-        await axios.delete(`${API_BASE_URL}/api/notifications`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete('/notifications');
     } catch (error) {
         console.error('Error deleting all notifications:', error);
         throw error;

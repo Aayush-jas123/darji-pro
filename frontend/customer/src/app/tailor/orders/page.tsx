@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
+import api from '@/lib/api';
 
 export default function TailorOrders() {
     const router = useRouter();
@@ -31,19 +32,10 @@ export default function TailorOrders() {
 
     const fetchOrders = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
-            }
+            const response = await api.get('/orders');
+            setOrders(response.data);
         } catch (error) {
-            console.error(error);
+            console.error('Failed to fetch orders:', error);
         } finally {
             setLoading(false);
         }
