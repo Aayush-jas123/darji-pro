@@ -41,17 +41,32 @@ function TailorDashboardContent() {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            // Fetch Appointments
-            const apptRes = await api.get('/api/appointments');
-            const appointments = apptRes.data;
+            // Fetch Appointments with error handling
+            let appointments = [];
+            try {
+                const apptRes = await api.get('/api/appointments');
+                // Handle both paginated and direct array responses
+                appointments = apptRes.data.appointments || apptRes.data || [];
+            } catch (error: any) {
+                console.error('Failed to load appointments:', error.message);
+            }
 
-            // Fetch Orders
-            const orderRes = await api.get('/api/orders');
-            const orders = orderRes.data;
+            // Fetch Orders with error handling (may not exist yet)
+            let orders = [];
+            try {
+                const orderRes = await api.get('/api/orders');
+                orders = orderRes.data || [];
+            } catch (error: any) {
+                console.warn('Orders API not available:', error.message);
+                // Continue with empty orders array
+            }
 
             // Process Data
             const today = new Date().toISOString().split('T')[0];
-            const todayAppts = appointments.filter((a: any) => a.appointment_date.startsWith(today));
+            const todayAppts = appointments.filter((a: any) => {
+                const schedDate = a.scheduled_date || '';
+                return typeof schedDate === 'string' && schedDate.startsWith(today);
+            });
 
             // Limit to 5 upcoming
             setTodaySchedule(todayAppts.slice(0, 5));
@@ -139,12 +154,12 @@ function TailorDashboardContent() {
                                     <div key={appt.id} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
                                         <div className="text-center min-w-[60px]">
                                             <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                                {format(new Date(appt.appointment_date), 'h:mm a')}
+                                                {format(new Date(appt.scheduled_date), 'h:mm a')}
                                             </p>
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="font-semibold text-gray-900 dark:text-white line-clamp-1">Customer #{appt.customer_id}</h4>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{appt.service_type}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{appt.appointment_type}</p>
                                             <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
                                                 <MapPin className="w-3 h-3" />
                                                 <span>Branch #{appt.branch_id}</span>
