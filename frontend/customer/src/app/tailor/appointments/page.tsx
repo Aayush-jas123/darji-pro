@@ -150,10 +150,10 @@ export default function TailorAppointments() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                        {format(new Date(appt.scheduled_date), 'MMM d, yyyy')}
+                                                        {appt.scheduled_date ? format(new Date(appt.scheduled_date), 'MMM d, yyyy') : 'TBD'}
                                                     </p>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {format(new Date(appt.scheduled_date), 'h:mm a')}
+                                                        {appt.scheduled_date ? format(new Date(appt.scheduled_date), 'h:mm a') : 'TBD'}
                                                     </p>
                                                 </div>
                                             </div>

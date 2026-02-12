@@ -154,7 +154,7 @@ function TailorDashboardContent() {
                                     <div key={appt.id} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
                                         <div className="text-center min-w-[60px]">
                                             <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                                {format(new Date(appt.scheduled_date), 'h:mm a')}
+                                                {appt.scheduled_date ? format(new Date(appt.scheduled_date), 'h:mm a') : 'TBD'}
                                             </p>
                                         </div>
                                         <div className="flex-1">
