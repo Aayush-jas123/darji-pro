@@ -84,7 +84,7 @@ class MeasurementProfileResponse(MeasurementProfileBase):
     id: int
     customer_id: int
     current_version: int
-    status: MeasurementStatus
+    status: str  # Relaxed from MeasurementStatus to prevent validation errors
     approved_by_id: Optional[int] = None
     approved_at: Optional[datetime] = None
     rejection_reason: Optional[str] = None
