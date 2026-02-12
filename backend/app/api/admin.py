@@ -144,7 +144,7 @@ async def list_appointments(
         query = query.where(Appointment.tailor_id == tailor_id)
     
     # Apply pagination
-    query = query.offset(skip).limit(limit).order_by(Appointment.scheduled_time.desc())
+    query = query.offset(skip).limit(limit).order_by(Appointment.scheduled_date.desc())
     
     # Execute query
     result = await db.execute(query)
