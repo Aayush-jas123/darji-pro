@@ -148,16 +148,21 @@ export default function BookAppointmentPage() {
             const appointmentDate = new Date(state.date);
             appointmentDate.setHours(hours, minutes, 0, 0);
 
-            // Shift to UTC for backend if needed, or send local ISO
-            // Backend expects ISO string. `state.date` from react-calendar is local 00:00:00 usually?
-            // appointmentDate is now correct local time. toISOString() converts to UTC.
-            const isoDate = appointmentDate.toISOString();
+            // Format as local datetime string (YYYY-MM-DDTHH:mm:ss) without timezone
+            // Database expects TIMESTAMP WITHOUT TIME ZONE
+            const year = appointmentDate.getFullYear();
+            const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(appointmentDate.getDate()).padStart(2, '0');
+            const hour = String(appointmentDate.getHours()).padStart(2, '0');
+            const minute = String(appointmentDate.getMinutes()).padStart(2, '0');
+            const second = String(appointmentDate.getSeconds()).padStart(2, '0');
+            const localDateTime = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 
             await api.post('/api/appointments', {
                 branch_id: state.branch.id,
                 tailor_id: state.tailor.id,
                 appointment_type: state.service,
-                scheduled_date: isoDate,
+                scheduled_date: localDateTime,
                 duration_minutes: 30,
                 customer_notes: state.notes || undefined
             });
