@@ -43,11 +43,11 @@ const STEPS = [
 ];
 
 const SERVICES = [
-    { id: 'NEW_SUIT', label: 'New Suit Consultation', icon: Shirt, desc: 'Full consultation for a bespoke suit' },
-    { id: 'MEASUREMENT', label: 'Measurement Session', icon: Ruler, desc: 'Get your precise measurements taken' },
-    { id: 'ALTERATION', label: 'Alteration', icon: Scissors, desc: 'Adjustments to existing garments' },
-    { id: 'FITTING', label: 'Fitting / Trial', icon: CheckCircle, desc: 'Try on your garment in progress' },
-    { id: 'CONSULTATION', label: 'General Consultation', icon: MessageCircle, desc: 'Discuss fabrics and styles' }
+    { id: 'consultation', label: 'New Suit Consultation', icon: Shirt, desc: 'Full consultation for a bespoke suit' },
+    { id: 'measurement', label: 'Measurement Session', icon: Ruler, desc: 'Get your precise measurements taken' },
+    { id: 'alteration', label: 'Alteration', icon: Scissors, desc: 'Adjustments to existing garments' },
+    { id: 'fitting', label: 'Fitting / Trial', icon: CheckCircle, desc: 'Try on your garment in progress' },
+    { id: 'consultation', label: 'General Consultation', icon: MessageCircle, desc: 'Discuss fabrics and styles' }
 ];
 
 export default function BookAppointmentPage() {
