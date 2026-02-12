@@ -150,11 +150,11 @@ export default function BookAppointmentPage() {
             await api.post('/api/appointments', {
                 branch_id: state.branch.id,
                 tailor_id: state.tailor.id,
-                service_type: state.service,
+                appointment_type: state.service,
                 appointment_time: isoDate,
                 scheduled_date: isoDate,
                 duration_minutes: 30, // Default to 30 mins
-                notes: state.notes,
+                customer_notes: state.notes,
                 status: 'PENDING'
             });
 
