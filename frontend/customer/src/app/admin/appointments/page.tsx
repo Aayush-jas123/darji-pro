@@ -8,8 +8,8 @@ interface Appointment {
     customer_id: number;
     tailor_id: number | null;
     branch_id: number;
-    scheduled_time: string;
-    service_type: string;
+    scheduled_date: string;
+    appointment_type: string;
     status: string;
     notes: string | null;
     created_at: string;
@@ -202,10 +202,10 @@ export default function AdminAppointments() {
                                         #{appointment.id}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {appointment.service_type}
+                                        {appointment.appointment_type}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {formatDate(appointment.scheduled_time)}
+                                        {formatDate(appointment.scheduled_date)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         #{appointment.customer_id}

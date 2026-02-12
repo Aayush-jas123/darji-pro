@@ -64,7 +64,7 @@ export default function TailorAppointments() {
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
             filtered = filtered.filter(a =>
-                a.service_type.toLowerCase().includes(lowerTerm) ||
+                a.appointment_type.toLowerCase().includes(lowerTerm) ||
                 a.status.toLowerCase().includes(lowerTerm) ||
                 String(a.customer_id).includes(lowerTerm)
             );
@@ -150,10 +150,10 @@ export default function TailorAppointments() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                        {format(new Date(appt.appointment_date), 'MMM d, yyyy')}
+                                                        {format(new Date(appt.scheduled_date), 'MMM d, yyyy')}
                                                     </p>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {format(new Date(appt.appointment_date), 'h:mm a')}
+                                                        {format(new Date(appt.scheduled_date), 'h:mm a')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -162,7 +162,7 @@ export default function TailorAppointments() {
                                             <p className="text-gray-900 dark:text-white font-medium">Customer #{appt.customer_id}</p>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                                            {appt.service_type}
+                                            {appt.appointment_type}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(appt.status)}`}>
