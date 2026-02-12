@@ -37,7 +37,8 @@ export function RoleGuard({ allowedRoles, children, redirectTo }: RoleGuardProps
             }
 
             // Check if user's role is allowed
-            if (!allowedRoles.includes(userRole)) {
+            const rolesArray = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+            if (!rolesArray.includes(userRole)) {
                 console.log('RoleGuard - Access denied, redirecting based on role');
 
                 // If custom redirect specified, use it
