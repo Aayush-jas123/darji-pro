@@ -71,6 +71,12 @@ export default function BookAppointmentPage() {
     });
 
     useEffect(() => {
+        // Check if user is authenticated
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login?redirect=/book-appointment');
+            return;
+        }
         fetchBranches();
     }, []);
 
