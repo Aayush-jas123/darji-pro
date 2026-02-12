@@ -25,7 +25,8 @@ export function SidebarNav({ items, userRole, isSidebarOpen, isMobile }: Sidebar
     // Filter items based on user role
     const visibleItems = items.filter(item => {
         if (!item.roles || item.roles.length === 0) return true;
-        return userRole && item.roles.includes(userRole);
+        const rolesArray = Array.isArray(item.roles) ? item.roles : [item.roles];
+        return userRole && rolesArray.includes(userRole);
     });
 
     return (
@@ -37,8 +38,8 @@ export function SidebarNav({ items, userRole, isSidebarOpen, isMobile }: Sidebar
                 return (
                     <Link href={item.href} key={item.href}>
                         <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${isActive
-                                ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                            ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
                             }`}>
                             <Icon className="w-5 h-5 shrink-0" />
                             {(isSidebarOpen || isMobile) && <span>{item.label}</span>}
