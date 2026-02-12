@@ -151,11 +151,9 @@ export default function BookAppointmentPage() {
                 branch_id: state.branch.id,
                 tailor_id: state.tailor.id,
                 appointment_type: state.service,
-                appointment_time: isoDate,
                 scheduled_date: isoDate,
-                duration_minutes: 30, // Default to 30 mins
-                customer_notes: state.notes,
-                status: 'PENDING'
+                duration_minutes: 30,
+                customer_notes: state.notes || undefined
             });
 
             // Redirect on success
@@ -165,7 +163,13 @@ export default function BookAppointmentPage() {
             if (error.response?.status === 401) {
                 router.push(`/login?redirect=/book-appointment`);
             } else {
-                alert(error.response?.data?.detail || 'Failed to book appointment. Please try again.');
+                // Handle error message properly
+                let errorMessage = 'Failed to book appointment. Please try again.';
+                if (error.response?.data?.detail) {
+                    const detail = error.response.data.detail;
+                    errorMessage = typeof detail === 'string' ? detail : JSON.stringify(detail);
+                }
+                alert(errorMessage);
             }
             setLoading(prev => ({ ...prev, submit: false }));
         }
