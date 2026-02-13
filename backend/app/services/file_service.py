@@ -124,7 +124,7 @@ class FileService:
         return {
             "filename": Path(relative_path).name,
             "path": relative_path,
-            "url": f"/uploads/{relative_path}",
+            "url": f"/api/uploads/{relative_path}",
             "size": file.size,
             "width": width,
             "height": height,
@@ -147,7 +147,7 @@ class FileService:
         return {
             "filename": Path(relative_path).name,
             "path": relative_path,
-            "url": f"/uploads/{relative_path}",
+            "url": f"/api/uploads/{relative_path}",
             "size": file.size,
             "uploaded_at": datetime.now().isoformat()
         }
@@ -168,7 +168,7 @@ class FileService:
         return {
             "filename": Path(relative_path).name,
             "path": relative_path,
-            "url": f"/uploads/{relative_path}",
+            "url": f"/api/uploads/{relative_path}",
             "size": file.size,
             "uploaded_at": datetime.now().isoformat()
         }
@@ -199,7 +199,7 @@ class FileService:
         return {
             "filename": Path(relative_path).name,
             "path": relative_path,
-            "url": f"/uploads/{relative_path}",
+            "url": f"/api/uploads/{relative_path}",
             "size": file.size,
             "uploaded_at": datetime.now().isoformat()
         }
