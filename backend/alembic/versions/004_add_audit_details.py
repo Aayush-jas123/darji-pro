@@ -18,8 +18,13 @@ depends_on = None
 
 def upgrade():
     # Add details column to audit_logs table if it doesn't exist
-    # usage of IF NOT EXISTS logic via checking column first would be safer but standard alembic is:
-    op.add_column('audit_logs', sa.Column('details', sa.JSON(), nullable=True))
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = inspector.get_columns('audit_logs')
+    column_names = [c["name"] for c in columns]
+    
+    if 'details' not in column_names:
+        op.add_column('audit_logs', sa.Column('details', sa.JSON(), nullable=True))
 
 
 def downgrade():
