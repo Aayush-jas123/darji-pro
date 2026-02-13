@@ -190,7 +190,11 @@ function TailorDashboardContent() {
                     <div className=" divide-y divide-gray-100 dark:divide-gray-700">
                         {recentOrders.length > 0 ? (
                             recentOrders.map((order) => (
-                                <div key={order.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                                <div
+                                    key={order.id}
+                                    className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer"
+                                    onClick={() => router.push(`/tailor/orders/view?id=${order.id}`)}
+                                >
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm">
                                             {order.garment_type.substring(0, 2).toUpperCase()}

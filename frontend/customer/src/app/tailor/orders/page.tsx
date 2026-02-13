@@ -163,7 +163,7 @@ export default function TailorOrders() {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() => router.push(`/tailor/orders/${order.id}`)}
+                                                onClick={() => router.push(`/tailor/orders/view?id=${order.id}`)}
                                                 className="flex items-center gap-2"
                                             >
                                                 Manage <ChevronRight className="w-4 h-4" />
