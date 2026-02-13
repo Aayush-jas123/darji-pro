@@ -232,18 +232,60 @@ async def delete_notification(
     return {"message": "Notification deleted successfully"}
 
 
-@router.delete("/")
-async def delete_all_notifications(
+    return {"message": "All notifications deleted successfully"}
+
+
+@router.post("/test-email")
+async def send_test_email(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    email: Optional[str] = None,
 ):
-    """Delete all notifications for the current user."""
-    from sqlalchemy import delete as sql_delete
+    """
+    Send a test email to verify SMTP configuration.
+    If 'email' is provided, sends to that address. Otherwise sends to current user's email.
+    """
+    from app.services.notification import notification_service, NotificationChannel
     
-    await db.execute(
-        sql_delete(Notification).where(Notification.user_id == current_user.id)
-    )
+    target_email = email or current_user.email
     
-    await db.commit()
+    if not target_email:
+        raise HTTPException(
+            status_code=400, 
+            detail="No email address provided and current user has no email set."
+        )
     
-    return {"message": "All notifications deleted successfully"}
+    try:
+        # Create and send a notification
+        notification = await notification_service.create_and_send(
+            db=db,
+            user_id=current_user.id,
+            channel=NotificationChannel.EMAIL,
+            subject="Test Email from Darji Pro",
+            message=f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #4F46E5;">Test Notification</h2>
+                    <p>Hello {current_user.full_name},</p>
+                    <p>This is a test email from your Darji Pro application.</p>
+                    <p>If you are seeing this, your <strong>SMTP Configuration</strong> is working correctly! 🎉</p>
+                    <hr>
+                    <p style="font-size: 12px; color: #666;">Sent at: {datetime.utcnow()}</p>
+                </body>
+            </html>
+            """,
+            recipient_address=target_email
+        )
+        
+        if notification.status == NotificationStatus.DELIVERED or notification.status == NotificationStatus.SENT:
+             return {"message": "Test email sent successfully", "notification_id": notification.id}
+        else:
+             # It might return success=True in dev mode even if failed, but if notification status is FAILED...
+             return {
+                 "message": "Email queued but might have failed. Check logs.", 
+                 "status": notification.status,
+                 "error": notification.error_message
+             }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send test email: {str(e)}")
