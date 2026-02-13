@@ -11,7 +11,15 @@ def fix_state():
         print("DATABASE_URL not set")
         sys.exit(1)
     
-    # Ensure correct protocol for SQLAlchemy
+    # Ensure correct protocol for SQLAlchemy (Sync)
+    if "+asyncpg" in database_url:
+        database_url = database_url.replace("+asyncpg", "")
+        
+    # Ensure sslmode=require for Neon if missing (and not local)
+    if "sslmode" not in database_url and "localhost" not in database_url and "127.0.0.1" not in database_url:
+        separator = "&" if "?" in database_url else "?"
+        database_url = f"{database_url}{separator}sslmode=require"
+
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 

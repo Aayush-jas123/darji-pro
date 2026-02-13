@@ -117,11 +117,15 @@ class Settings(BaseSettings):
     @property
     def database_url_sync(self) -> str:
         """Get synchronous database URL for Alembic."""
-        # Remove +asyncpg and all query parameters for psycopg2
+        # Remove +asyncpg specific driver
         url = self.DATABASE_URL.replace("+asyncpg", "")
-        # Remove query parameters (everything after ?)
-        if "?" in url:
-            url = url.split("?")[0]
+        
+        # Ensure sslmode=require if using psycopg2 (for Neon/Render)
+        # and if not already present
+        if "sslmode" not in url and "localhost" not in url and "127.0.0.1" not in url:
+             separator = "&" if "?" in url else "?"
+             url = f"{url}{separator}sslmode=require"
+             
         return url
 
 
