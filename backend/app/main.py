@@ -178,6 +178,49 @@ def manual_migrate(secret: str):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@app.get("/api/debug-pdf")
+async def debug_pdf_diagnostic():
+    """Diagnostic endpoint to debug PDF generation issues (Public)."""
+    results = {}
+    
+    # 1. Check Import
+    try:
+        import reportlab
+        results["reportlab_version"] = reportlab.__version__
+        results["import_status"] = "Success"
+    except ImportError as e:
+        return {"status": "error", "error": f"ImportError: {e}", "stage": "import"}
+    except Exception as e:
+        return {"status": "error", "error": f"Unexpected Error during import: {e}", "stage": "import"}
+
+    # 2. Check Service Instantiation
+    try:
+        from app.services.pdf_service import pdf_service
+        results["service_status"] = "Loaded"
+    except Exception as e:
+        return {"status": "error", "error": f"Service Load Error: {e}", "stage": "service_load"}
+        
+    # 3. Check PDF Gen (Dummy)
+    try:
+        buffer = pdf_service.generate_measurement_pdf(
+            customer_name="Test User",
+            profile_name="Test Profile",
+            measurements={"chest": 40.0, "waist": 32.0},
+            fit_preference="regular"
+        )
+        results["generation_status"] = f"Success, size={buffer.getbuffer().nbytes} bytes"
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error", 
+            "error": f"Generation Error: {e}", 
+            "stage": "generation", 
+            "trace": traceback.format_exc()
+        }
+        
+    return results
+
+
 # Import API routers
 from app.api import (
     auth, users, appointments, measurements,
