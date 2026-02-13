@@ -32,3 +32,7 @@ joblib==1.4.2
 # Image Processing & File Handling
 Pillow==11.0.0
 aiofiles==23.2.1
+
+# PDF Generation
+reportlab==4.0.9
+
