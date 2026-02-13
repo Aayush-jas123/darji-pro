@@ -29,25 +29,44 @@ async def debug_measurements_raw(
 ):
     """Temporary debug endpoint to inspect raw data."""
     # Getting raw dictionaries to bypass pydantic validation
-    result = await db.execute(select(MeasurementProfile))
-    profiles = result.scalars().all()
+    # Join with current version to see measurements
+    stmt = (
+        select(MeasurementProfile, MeasurementVersion)
+        .outerjoin(
+            MeasurementVersion, 
+            (MeasurementVersion.profile_id == MeasurementProfile.id) & 
+            (MeasurementVersion.version_number == MeasurementProfile.current_version)
+        )
+    )
+    result = await db.execute(stmt)
+    rows = result.all()
     
     debug_data = []
-    for p in profiles:
+    for p, v in rows:
+        version_data = None
+        if v:
+            version_data = {
+                "id": v.id,
+                "version_number": v.version_number,
+                "fit_preference": str(v.fit_preference),
+                "neck": v.neck,
+                "chest": v.chest,
+                "waist": v.waist,
+                "hip": v.hip,
+                "height": v.additional_measurements.get("height") if v.additional_measurements else None,
+                "weight": v.additional_measurements.get("weight") if v.additional_measurements else None,
+                "additional_measurements": v.additional_measurements
+            }
+            
         debug_data.append({
-            "id": p.id,
-            "profile_name": p.profile_name,
-            "status": str(p.status),
-            "status_type": type(p.status).__name__,
-            "is_default": p.is_default,
-            "created_at": str(p.created_at),
-            "created_at_tz": str(p.created_at.tzinfo) if p.created_at else "None",
-            "updated_at": str(p.updated_at),
-            "customer_id": p.customer_id,
-            "current_version": p.current_version,
-            "rejection_reason": p.rejection_reason,
-            "approved_by_id": p.approved_by_id,
-            "approved_at": str(p.approved_at) if p.approved_at else None
+            "profile": {
+                "id": p.id,
+                "profile_name": p.profile_name,
+                "status": str(p.status),
+                "current_version": p.current_version,
+                "customer_id": p.customer_id,
+            },
+            "current_measurements": version_data
         })
     
     return debug_data
