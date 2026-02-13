@@ -33,6 +33,10 @@ joblib==1.4.2
 Pillow==11.0.0
 aiofiles==23.2.1
 
+
 # PDF Generation
 reportlab==4.0.9
+
+# Scheduling
+apscheduler==3.10.4
 
