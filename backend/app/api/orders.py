@@ -82,18 +82,23 @@ async def create_order(
     await db.refresh(new_order)
     
     # Log order creation
-    await create_audit_log(
-        db=db,
-        action=AuditAction.ORDER_CREATED,
-        user=current_user,
-        resource_type="order",
-        resource_id=new_order.id,
-        details={
-            "order_number": order_number,
-            "garment_type": order_data.garment_type,
-            "customer_id": appointment.customer_id,
-        },
-    )
+    # Log order creation
+    try:
+        await create_audit_log(
+            db=db,
+            action=AuditAction.ORDER_CREATED,
+            user=current_user,
+            resource_type="order",
+            resource_id=new_order.id,
+            details={
+                "order_number": order_number,
+                "garment_type": order_data.garment_type,
+                "customer_id": appointment.customer_id,
+            },
+        )
+    except Exception as e:
+        # Don't fail the request if audit logging fails
+        print(f"Failed to create audit log: {e}")
     
     return new_order
 
@@ -255,6 +260,8 @@ async def update_order(
         except Exception as e:
             # Log error but don't fail the order update
             print(f"Failed to send order status notification: {e}")
+            # Ensure we don't propagate the error
+            pass
     
     return order
 
