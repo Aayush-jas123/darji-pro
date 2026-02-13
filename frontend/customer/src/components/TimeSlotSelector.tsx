@@ -63,18 +63,33 @@ export function TimeSlotSelector({ tailorId, selectedTime, onTimeSelect, availab
                             className={`
                                 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200
                                 ${!isAvailable
-                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-100 dark:border-gray-800'
+                                    ? 'bg-red-50 text-red-400 cursor-not-allowed border border-red-100 opacity-80'
                                     : isSelected
                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md transform scale-105'
                                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-sm'
                                 }
                             `}
                         >
-                            <Clock className={`w-4 h-4 ${!isAvailable ? 'text-gray-300' : isSelected ? 'text-white' : 'text-gray-400'}`} />
+                            <Clock className={`w-4 h-4 ${!isAvailable ? 'text-red-300' : isSelected ? 'text-white' : 'text-gray-400'}`} />
                             {timeLabel}
                         </button>
                     );
                 })}
+            </div>
+
+            <div className="mt-4 flex items-center gap-4 text-xs text-gray-500 justify-center">
+                <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-white border border-gray-300"></div>
+                    <span>Available</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600"></div>
+                    <span>Selected</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-red-50 border border-red-100"></div>
+                    <span>Unavailable/Booked</span>
+                </div>
             </div>
         </div>
     );

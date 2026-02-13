@@ -344,13 +344,37 @@ async def get_availability(
     Get availability slots for a tailor on a specific date.
     """
     # Define working hours (10:00 to 19:00)
-    start_hour = 10
-    end_hour = 19
-    slot_duration = 30  # minutes
+    # Determine day of week
+    day_name = date.strftime("%A").lower()
+    
+    # Fetch tailor availability for this branch and day
+    availability_query = select(TailorAvailability).where(
+        and_(
+            TailorAvailability.tailor_id == tailor_id,
+            TailorAvailability.branch_id == branch_id,
+            TailorAvailability.day_of_week == day_name,
+            TailorAvailability.is_active == True
+        )
+    )
+    availability_result = await db.execute(availability_query)
+    tailor_availability = availability_result.scalar_one_or_none()
+    
+    # If no availability record found, assume tailor is off
+    if not tailor_availability:
+        return AvailabilityResponse(
+            date=date,
+            branch_id=branch_id,
+            available_slots=[]
+        )
 
-    # Set start and end time for the day
-    start_time = date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
-    end_time = date.replace(hour=end_hour, minute=0, second=0, microsecond=0)
+    # Use configured working hours
+    start_time_time = tailor_availability.start_time
+    end_time_time = tailor_availability.end_time
+    slot_duration = tailor_availability.slot_duration_minutes
+
+    # Combine date with time
+    start_time = datetime.combine(date.date(), start_time_time)
+    end_time = datetime.combine(date.date(), end_time_time)
     
     # Fetch existing appointments
     query = select(Appointment).where(
@@ -377,11 +401,14 @@ async def get_availability(
         # Check if slot is taken
         is_available = True
         for appointment in existing_appointments:
-            # Simple overlap check: if appointment starts at the same time as the slot
-            # In a more complex system, we'd check for full overlaps
-            if appointment.scheduled_date == current_slot:
-                is_available = False
-                break
+            # Check for overlap
+            # Appointment starts during slot OR Slot starts during appointment
+            app_start = appointment.scheduled_date
+            app_end = app_start + timedelta(minutes=appointment.duration_minutes)
+            
+            if (current_slot < app_end and slot_end > app_start):
+                 is_available = False
+                 break
         
         # Get tailor name (could be optimized to fetch once)
         tailor_result = await db.execute(select(User).where(User.id == tailor_id))
