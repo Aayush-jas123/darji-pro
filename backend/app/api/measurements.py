@@ -435,15 +435,28 @@ async def export_measurement_pdf(
     notes = "\n".join(notes_parts) if notes_parts else None
     
     # Generate PDF
-    pdf_buffer = pdf_service.generate_measurement_pdf(
-        customer_name=customer.full_name if customer else "Unknown Customer",
-        profile_name=profile.profile_name,
-        measurements=measurements,
-        fit_preference=current_version.fit_preference,
-        measured_by=measured_by_name,
-        measurement_date=current_version.created_at,
-        notes=notes
-    )
+    try:
+        pdf_buffer = pdf_service.generate_measurement_pdf(
+            customer_name=customer.full_name if customer else "Unknown Customer",
+            profile_name=profile.profile_name,
+            measurements=measurements,
+            fit_preference=current_version.fit_preference,
+            measured_by=measured_by_name,
+            measurement_date=current_version.created_at,
+            notes=notes
+        )
+    except ImportError as e:
+        print(f"PDF Service Import Error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="PDF generation service unavailable (missing dependencies)",
+        )
+    except Exception as e:
+        print(f"PDF Generation Error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate PDF: {str(e)}",
+        )
     
     # Return PDF as download
     filename = f"measurement_{profile.profile_name.replace(' ', '_')}_{profile_id}.pdf"
