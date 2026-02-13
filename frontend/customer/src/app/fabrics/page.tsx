@@ -279,8 +279,18 @@ export default function FabricCatalog() {
                                 onClick={() => toggleSelection(fabric.id)}
                             >
                                 {/* Image Placeholder */}
-                                <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center relative">
-                                    <span className="text-6xl">🧵</span>
+                                <div className="h-48 bg-gray-100 dark:bg-gray-700 relative">
+                                    {fabric.image_url ? (
+                                        <img
+                                            src={fabric.image_url}
+                                            alt={fabric.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900">
+                                            <span className="text-6xl">🧵</span>
+                                        </div>
+                                    )}
                                     {!fabric.in_stock && (
                                         <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                                             Out of Stock
