@@ -97,13 +97,13 @@ class PDFService:
         elements.append(Paragraph("Customer Information", self.styles['CustomSubtitle']))
         
         customer_data = [
-            ['Customer Name:', customer_name],
-            ['Profile Name:', profile_name],
-            ['Fit Preference:', fit_preference.replace('_', ' ').title()],
+            ['Customer Name:', str(customer_name)],
+            ['Profile Name:', str(profile_name)],
+            ['Fit Preference:', str(fit_preference).replace('_', ' ').title()],
         ]
         
         if measured_by:
-            customer_data.append(['Measured By:', measured_by])
+            customer_data.append(['Measured By:', str(measured_by)])
         
         if measurement_date:
             customer_data.append(['Date:', measurement_date.strftime('%B %d, %Y')])
@@ -141,9 +141,13 @@ class PDFService:
             
             for field in fields:
                 if field in measurements and measurements[field] is not None:
-                    label = field.replace('_', ' ').title()
-                    value = f"{measurements[field]:.1f} cm"
-                    category_measurements.append([label, value])
+                    try:
+                        val_float = float(measurements[field])
+                        label = field.replace('_', ' ').title()
+                        value = f"{val_float:.1f} cm"
+                        category_measurements.append([label, value])
+                    except (ValueError, TypeError):
+                        continue
             
             if category_measurements:
                 elements.append(Paragraph(category, self.styles['Heading3']))
