@@ -68,52 +68,66 @@ function MeasurementEditContent() {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                setTimeout(() => {
-                    reset({
-                        profile_name: 'My Wedding Suit',
-                        chest: 42,
-                        waist: 34,
-                        hip: 40,
-                        neck: 16,
-                        shoulder: 18,
-                        arm_length: 25,
-                        inseam: 32,
-                        height: 180,
-                        weight: 75
-                    });
-                    setLoading(false);
-                }, 500);
+                router.push('/login');
                 return;
             }
 
             const response = await api.get(`/api/measurements/${profileId}`);
             const data = response.data;
+            const measurements = data.current_measurements || {};
 
             reset({
                 profile_name: data.profile_name,
-                chest: data.measurements?.chest,
-                waist: data.measurements?.waist,
-                hip: data.measurements?.hip,
-                neck: data.measurements?.neck,
-                shoulder: data.measurements?.shoulder,
-                arm_length: data.measurements?.arm_length,
-                inseam: data.measurements?.inseam,
-                height: data.measurements?.additional_measurements?.height,
-                weight: data.measurements?.additional_measurements?.weight,
+                chest: measurements.chest,
+                waist: measurements.waist,
+                hip: measurements.hip,
+                neck: measurements.neck,
+                shoulder: measurements.shoulder,
+                arm_length: measurements.arm_length,
+                inseam: measurements.inseam,
+                height: measurements.additional_measurements?.height,
+                weight: measurements.additional_measurements?.weight,
             });
             setLoading(false);
         } catch (error) {
             console.error('Failed to fetch profile:', error);
             setLoading(false);
+            // If 404/403, maybe redirect
         }
     };
 
     const onSubmit = async (data: MeasurementFormData) => {
         try {
-            // const payload = ... (Add your update logic here)
-            // Simulating update success
+            // 1. Update Profile Metadata (Name)
+            // We can check if name changed, but safe to just update
+            await api.put(`/api/measurements/${id}`, {
+                profile_name: data.profile_name
+            });
+
+            // 2. Create New Version with updated measurements
+            const versionPayload = {
+                chest: data.chest || undefined,
+                waist: data.waist || undefined,
+                hip: data.hip || undefined,
+                neck: data.neck || undefined,
+                shoulder: data.shoulder || undefined,
+                arm_length: data.arm_length || undefined,
+                inseam: data.inseam || undefined,
+                fit_preference: 'regular', // Default for now until UI added
+                additional_measurements: {
+                    height: data.height,
+                    weight: data.weight
+                }
+            };
+
+            await api.post(`/api/measurements/${id}/versions`, versionPayload);
+
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
+
+            // Refresh data to get new version number etc
+            fetchProfile(id!);
+
         } catch (error) {
             console.error('Failed to update:', error);
             alert('Failed to update profile');
