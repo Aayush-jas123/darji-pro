@@ -62,7 +62,7 @@ export default function NewMeasurementPage() {
                     shoulder: data.shoulder || undefined,
                     arm_length: data.arm_length || undefined,
                     inseam: data.inseam || undefined,
-                    fit_preference: 'REGULAR',
+                    fit_preference: 'regular',
                     additional_measurements: {
                         height: data.height,
                         weight: data.weight
@@ -78,12 +78,10 @@ export default function NewMeasurementPage() {
                 // router.push('/login?redirect=/measurements/new');
                 return;
             }
-            // Mock success for dev
-            router.push('/measurements');
 
-            // setError('root', {
-            //     message: error.response?.data?.detail || 'Failed to save profile.',
-            // });
+            setError('root', {
+                message: error.response?.data?.detail || 'Failed to save profile.',
+            });
         }
     };
 
