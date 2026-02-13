@@ -289,3 +289,26 @@ async def send_test_email(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send test email: {str(e)}")
+
+
+@router.post("/trigger-reminders")
+async def trigger_reminders(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Manually trigger the appointment reminder check.
+    Useful for testing the scheduler logic.
+    """
+    # Only admin should probably do this, but for now allow any auth user or restricted
+    if current_user.role != "admin":
+         raise HTTPException(status_code=403, detail="Only admins can trigger reminders manually.")
+         
+    from app.services.scheduler import send_appointment_reminders
+    
+    # Run in background or await? Await for feedback.
+    try:
+        await send_appointment_reminders()
+        return {"message": "Reminder check triggered successfully. Check server logs for details."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to trigger reminders: {str(e)}")

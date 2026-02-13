@@ -37,7 +37,7 @@ emails==0.6
 twilio==8.11.1
 
 # PDF Generation
-reportlab==4.0.9
+reportlab==4.0.9 # Reinstall
 weasyprint==60.2
 
 # ML & Data Science
@@ -68,5 +68,9 @@ mypy==1.8.0
 # Monitoring & Logging
 python-json-logger==2.0.7
 
+
 # Rate Limiting
 slowapi==0.1.9
+
+# Scheduling
+apscheduler==3.10.4

@@ -62,6 +62,13 @@ async def lifespan(app: FastAPI):
             pass
     """
     
+    # Start Scheduler
+    from app.services.scheduler import start_scheduler
+    try:
+        start_scheduler()
+    except Exception as e:
+        print(f"⚠️ Failed to start scheduler: {e}")
+
     yield
     
     # Shutdown
