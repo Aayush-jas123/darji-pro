@@ -101,7 +101,7 @@ async def update_fabric(
 @router.delete("/{fabric_id}")
 async def delete_fabric(
     fabric_id: int,
-    current_user: Annotated[User, Depends(require_role([UserRole.ADMIN.value]))],
+    current_user: Annotated[User, Depends(require_role([UserRole.ADMIN.value, UserRole.TAILOR.value]))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """
