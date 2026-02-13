@@ -174,7 +174,7 @@ export default function TailorAppointments() {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() => router.push(`/tailor/appointments/${appt.id}`)}
+                                                onClick={() => router.push(`/tailor/appointments/view?id=${appt.id}`)}
                                                 className="flex items-center gap-2"
                                             >
                                                 Details <ChevronRight className="w-4 h-4" />

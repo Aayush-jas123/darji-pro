@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Calendar,
     Clock,
@@ -20,10 +20,10 @@ import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
 import api from '@/lib/api';
 
-export default function AppointmentDetailsPage() {
+function AppointmentDetailsContent() {
     const router = useRouter();
-    const params = useParams();
-    const { id } = params;
+    const searchParams = useSearchParams();
+    const id = searchParams.get('id');
 
     const [appointment, setAppointment] = useState<any>(null);
     const [customer, setCustomer] = useState<any>(null);
@@ -100,7 +100,7 @@ export default function AppointmentDetailsPage() {
     if (error || !appointment) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm text-center max-w-md w-full">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center max-w-md w-full">
                     <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Appointment</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'Appointment not found'}</p>
@@ -127,7 +127,7 @@ export default function AppointmentDetailsPage() {
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
+                            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-900/50">
                                 <span className="text-xl">
                                     {new Date(appointment.scheduled_date).getDate()}
                                 </span>
@@ -185,7 +185,7 @@ export default function AppointmentDetailsPage() {
                                     variant="outline"
                                     onClick={() => handleStatusUpdate('cancelled')}
                                     isLoading={updating}
-                                    className="text-red-600 border-red-200 hover:bg-red-50"
+                                    className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
                                 >
                                     <XCircle className="w-4 h-4 mr-2" />
                                     Cancel
@@ -277,5 +277,17 @@ export default function AppointmentDetailsPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AppointmentDetailsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            </div>
+        }>
+            <AppointmentDetailsContent />
+        </Suspense>
     );
 }
