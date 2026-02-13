@@ -37,7 +37,7 @@ class OrderUpdate(BaseModel):
 
 
 # Admin/Tailor endpoints
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_order(
     order_data: OrderCreate,
     current_user: Annotated[User, Depends(require_role([UserRole.ADMIN.value, UserRole.TAILOR.value]))],
@@ -103,7 +103,7 @@ async def create_order(
     return new_order
 
 
-@router.get("/")
+@router.get("")
 async def list_orders(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
