@@ -13,7 +13,7 @@ from app.schemas.fabric import FabricCreate, FabricResponse, FabricUpdate
 
 router = APIRouter()
 
-@router.get("/", response_model=List[FabricResponse])
+@router.get("", response_model=List[FabricResponse])
 async def list_fabrics(
     db: Annotated[AsyncSession, Depends(get_db)],
     type: Optional[str] = None,
@@ -57,7 +57,7 @@ async def list_fabrics(
 
 
 
-@router.post("/", response_model=FabricResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=FabricResponse, status_code=status.HTTP_201_CREATED)
 async def create_fabric(
     fabric_data: FabricCreate,
     current_user: Annotated[User, Depends(require_role([UserRole.ADMIN.value, UserRole.TAILOR.value]))],
