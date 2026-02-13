@@ -434,3 +434,33 @@ async def delete_measurement_profile(
     await db.commit()
     
     return {"message": "Measurement profile deleted successfully"}
+
+
+@router.get("/debug-raw")
+async def debug_measurements_raw(
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Temporary debug endpoint to inspect raw data."""
+    # Getting raw dictionaries to bypass pydantic validation
+    result = await db.execute(select(MeasurementProfile))
+    profiles = result.scalars().all()
+    
+    debug_data = []
+    for p in profiles:
+        debug_data.append({
+            "id": p.id,
+            "profile_name": p.profile_name,
+            "status": str(p.status),
+            "status_type": type(p.status).__name__,
+            "is_default": p.is_default,
+            "created_at": str(p.created_at),
+            "created_at_tz": str(p.created_at.tzinfo) if p.created_at else "None",
+            "updated_at": str(p.updated_at),
+            "customer_id": p.customer_id,
+            "current_version": p.current_version,
+            "rejection_reason": p.rejection_reason,
+            "approved_by_id": p.approved_by_id,
+            "approved_at": str(p.approved_at) if p.approved_at else None
+        })
+    
+    return debug_data
