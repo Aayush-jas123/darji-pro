@@ -50,7 +50,7 @@ function CreateOrderContent() {
                 estimated_delivery: formData.estimated_delivery ? new Date(formData.estimated_delivery).toISOString() : null,
             };
 
-            const response = await api.post('/api/orders/', payload);
+            const response = await api.post('/api/orders', payload);
             router.push('/tailor');
         } catch (err: any) {
             console.error(err);
