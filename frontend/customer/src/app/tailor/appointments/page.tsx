@@ -40,7 +40,8 @@ export default function TailorAppointments() {
             const response = await api.get('/api/appointments');
 
             if (response.status === 200) {
-                setAppointments(response.data);
+                // Backend returns { appointments: [], total: ... } but we need just the array
+                setAppointments(response.data.appointments || response.data || []);
             }
         } catch (error) {
             console.error(error);

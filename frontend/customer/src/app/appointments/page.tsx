@@ -41,7 +41,8 @@ export default function AppointmentsPage() {
     const fetchAppointments = async () => {
         try {
             const res = await api.get('/api/appointments');
-            setAppointments(res.data);
+            // Backend returns { appointments: [], total: ... } but we need just the array
+            setAppointments(res.data.appointments || res.data || []);
         } catch (error) {
             console.error('Failed to fetch appointments', error);
         } finally {
