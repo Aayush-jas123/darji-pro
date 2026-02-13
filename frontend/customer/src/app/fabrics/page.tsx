@@ -303,7 +303,10 @@ export default function FabricCatalog() {
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex-1">
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{fabric.name}</h3>
-                                            <div className="flex items-center gap-2 mt-1">
+                                            <p className="text-xs font-mono text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded w-fit mt-1">
+                                                ID: #{fabric.id}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-2">
                                                 <span className="text-sm text-gray-600 dark:text-gray-400">{fabric.type}</span>
                                                 {fabric.color && (
                                                     <>

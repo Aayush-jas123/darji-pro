@@ -33,6 +33,7 @@ interface BookingState {
     date: Date | null;
     time: string | null;
     notes: string;
+    fabricId: string; // Added field
     availableSlots: any[];
 }
 
@@ -70,6 +71,7 @@ export default function BookAppointmentPage() {
         date: null,
         time: null,
         notes: '',
+        fabricId: '', // Initialize
         availableSlots: []
     });
 
@@ -183,8 +185,7 @@ export default function BookAppointmentPage() {
             const appointmentDate = new Date(state.date);
             appointmentDate.setHours(hours, minutes, 0, 0);
 
-            // Format as local datetime string (YYYY-MM-DDTHH:mm:ss) without timezone
-            // Database expects TIMESTAMP WITHOUT TIME ZONE
+            // Format as local datetime string
             const year = appointmentDate.getFullYear();
             const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
             const day = String(appointmentDate.getDate()).padStart(2, '0');
@@ -193,23 +194,30 @@ export default function BookAppointmentPage() {
             const second = String(appointmentDate.getSeconds()).padStart(2, '0');
             const localDateTime = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 
+            // Append Fabric ID to notes if present
+            let finalNotes = state.notes;
+            if (state.fabricId && state.fabricId.trim() !== '') {
+                const fabricNote = `[Fabric ID: #${state.fabricId.trim()}]`;
+                finalNotes = finalNotes ? `${finalNotes}\n\n${fabricNote}` : fabricNote;
+            }
+
             await api.post('/api/appointments', {
                 branch_id: state.branch.id,
                 tailor_id: state.tailor.id,
                 appointment_type: state.service,
                 scheduled_date: localDateTime,
                 duration_minutes: 30,
-                customer_notes: state.notes || undefined
+                customer_notes: finalNotes || undefined
             });
 
             // Redirect on success
             router.push('/dashboard?appointment_booked=true');
         } catch (error: any) {
+            // ... existing error handling
             console.error('Booking failed', error);
             if (error.response?.status === 401) {
                 router.push(`/login?redirect=/book-appointment`);
             } else {
-                // Handle error message properly
                 let errorMessage = 'Failed to book appointment. Please try again.';
                 if (error.response?.data?.detail) {
                     const detail = error.response.data.detail;
@@ -384,6 +392,7 @@ export default function BookAppointmentPage() {
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">Booking Summary</h3>
 
+                {/* ... SummaryItems ... */}
                 <div className="space-y-4">
                     <SummaryItem
                         icon={MapPin} label="Branch"
@@ -410,6 +419,17 @@ export default function BookAppointmentPage() {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Fabric ID (Optional)
+                    </label>
+                    <input
+                        type="text"
+                        value={state.fabricId}
+                        onChange={(e) => setState(prev => ({ ...prev, fabricId: e.target.value }))}
+                        placeholder="e.g. 12 (Check Fabric Catalog)"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow mb-4"
+                    />
+
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Notes (Optional)
                     </label>
