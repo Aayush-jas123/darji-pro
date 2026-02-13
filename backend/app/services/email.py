@@ -13,9 +13,11 @@ class EmailService:
     """Email service for sending notifications."""
     
     def __init__(self):
-        self.smtp_server = "smtp.gmail.com"  # Change based on provider
-        self.smtp_port = 587
-        self.sender_email = settings.SMTP_EMAIL if hasattr(settings, 'SMTP_EMAIL') else "noreply@darjipro.com"
+        self.smtp_server = settings.SMTP_HOST
+        self.smtp_port = settings.SMTP_PORT
+        self.sender_email = settings.SMTP_USER if hasattr(settings, 'SMTP_USER') else "noreply@darjipro.com"
+        # Use EMAIL_FROM for the "From" header if available, otherwise use sender_email
+        self.from_email = settings.EMAIL_FROM if hasattr(settings, 'EMAIL_FROM') and settings.EMAIL_FROM else self.sender_email
         self.sender_password = settings.SMTP_PASSWORD if hasattr(settings, 'SMTP_PASSWORD') else ""
     
     def send_email(self, to_email: str, subject: str, html_content: str) -> bool:
@@ -23,25 +25,39 @@ class EmailService:
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
-            message["From"] = self.sender_email
+            message["From"] = f"{settings.EMAIL_FROM_NAME} <{self.from_email}>"
             message["To"] = to_email
             
             html_part = MIMEText(html_content, "html")
             message.attach(html_part)
             
-            # For now, just log (in production, actually send)
-            print(f"📧 Email to {to_email}: {subject}")
-            print(f"Content: {html_content[:100]}...")
+            # Log for debugging
+            print(f"📧 [Email Service] Preparing to send to {to_email}: {subject}")
             
-            # Uncomment for actual sending:
-            # with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-            #     server.starttls()
-            #     server.login(self.sender_email, self.sender_password)
-            #     server.send_message(message)
-            
-            return True
+            # Actual sending
+            if self.sender_email and self.sender_password:
+                try:
+                    with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                        server.starttls()
+                        server.login(self.sender_email, self.sender_password)
+                        server.send_message(message)
+                    print(f"✅ [Email Service] Email sent successfully to {to_email}")
+                    return True
+                except Exception as e:
+                    print(f"❌ [Email Service] SMTP/Network Error: {e}")
+                    # Fallback to logging if SMTP fails (for dev without creds)
+                    if settings.ENVIRONMENT == "development":
+                        print("⚠️ [Email Service] Dev Mode: SMTP failed but pretending success for flow testing.")
+                        return True 
+                    return False
+            else:
+                print("⚠️ [Email Service] No credentials configured. Email NOT sent.")
+                if settings.ENVIRONMENT == "development":
+                    return True # Pretend success in dev
+                return False
+                
         except Exception as e:
-            print(f"❌ Email error: {e}")
+            print(f"❌ [Email Service] Unexpected error: {e}")
             return False
     
     def send_appointment_confirmation(
