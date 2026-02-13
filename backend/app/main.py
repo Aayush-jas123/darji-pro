@@ -103,7 +103,7 @@ app.add_middleware(
 if settings.ENVIRONMENT == "production":
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["*.darjipro.com", "darjipro.com", "darji-pro.onrender.com"]
+        allowed_hosts=["*.darjipro.com", "darjipro.com", "*.onrender.com"]
     )
 
 

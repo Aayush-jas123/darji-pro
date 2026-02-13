@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+    TESTING: bool = False
 
     # API Configuration
     API_HOST: str = "0.0.0.0"
