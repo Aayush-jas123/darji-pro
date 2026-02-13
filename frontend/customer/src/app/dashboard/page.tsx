@@ -306,9 +306,11 @@ function DashboardContent() {
                                 <p className="text-gray-300 text-sm mb-6">
                                     Explore our new collection of Italian wools and silk blends for your next suit.
                                 </p>
-                                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 dark:hover:bg-white/10">
-                                    View Catalog
-                                </Button>
+                                <Link href="/fabrics">
+                                    <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 dark:hover:bg-white/10">
+                                        View Catalog
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
 

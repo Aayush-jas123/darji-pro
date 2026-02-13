@@ -13,6 +13,7 @@ import {
     FileText,
     Shield,
     UserCheck,
+    Layers,
 } from 'lucide-react';
 import { NavItem } from '@/components/SidebarNav';
 
@@ -33,6 +34,7 @@ export const tailorNavItems: NavItem[] = [
     { href: '/tailor/appointments', label: 'My Appointments', icon: Calendar },
     { href: '/tailor/orders', label: 'Assigned Orders', icon: Scissors },
     { href: '/tailor/measurements', label: 'Measurements', icon: Ruler },
+    { href: '/tailor/fabrics', label: 'Fabric Inventory', icon: Layers },
     { href: '/tailor/availability', label: 'My Availability', icon: Clock },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/tailor/profile', label: 'My Profile', icon: User },
