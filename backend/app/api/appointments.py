@@ -41,6 +41,10 @@ async def create_appointment(
     - **tailor_id**: ID of the tailor
     - **branch_id**: ID of the branch
     """
+    # Start transaction and lock the tailor to prevent race conditions
+    # This ensures only one appointment can be booked for a tailor at a time
+    await db.execute(select(User).where(User.id == appointment_data.tailor_id).with_for_update())
+
     # Check for conflicts
     conflict_query = select(Appointment).where(
         and_(
@@ -327,3 +331,75 @@ async def cancel_appointment(
     await db.commit()
     
     return {"message": "Appointment cancelled successfully"}
+
+
+@router.get("/availability/slots", response_model=AvailabilityResponse)
+async def get_availability(
+    tailor_id: int,
+    branch_id: int,
+    date: datetime,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Get availability slots for a tailor on a specific date.
+    """
+    # Define working hours (10:00 to 19:00)
+    start_hour = 10
+    end_hour = 19
+    slot_duration = 30  # minutes
+
+    # Set start and end time for the day
+    start_time = date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+    end_time = date.replace(hour=end_hour, minute=0, second=0, microsecond=0)
+    
+    # Fetch existing appointments
+    query = select(Appointment).where(
+        and_(
+            Appointment.tailor_id == tailor_id,
+            Appointment.scheduled_date >= start_time,
+            Appointment.scheduled_date < end_time,
+            Appointment.status.in_([
+                AppointmentStatus.PENDING,
+                AppointmentStatus.CONFIRMED,
+                AppointmentStatus.IN_PROGRESS,
+            ])
+        )
+    )
+    result = await db.execute(query)
+    existing_appointments = result.scalars().all()
+    
+    # Generate slots
+    slots = []
+    current_slot = start_time
+    while current_slot < end_time:
+        slot_end = current_slot + timedelta(minutes=slot_duration)
+        
+        # Check if slot is taken
+        is_available = True
+        for appointment in existing_appointments:
+            # Simple overlap check: if appointment starts at the same time as the slot
+            # In a more complex system, we'd check for full overlaps
+            if appointment.scheduled_date == current_slot:
+                is_available = False
+                break
+        
+        # Get tailor name (could be optimized to fetch once)
+        tailor_result = await db.execute(select(User).where(User.id == tailor_id))
+        tailor = tailor_result.scalar_one_or_none()
+        tailor_name = tailor.full_name if tailor else "Unknown Tailor"
+
+        slots.append(AvailabilitySlot(
+            start_time=current_slot,
+            end_time=slot_end,
+            tailor_id=tailor_id,
+            tailor_name=tailor_name,
+            is_available=is_available
+        ))
+        
+        current_slot = slot_end
+        
+    return AvailabilityResponse(
+        date=date,
+        branch_id=branch_id,
+        available_slots=slots
+    )

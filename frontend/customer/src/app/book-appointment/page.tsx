@@ -33,6 +33,7 @@ interface BookingState {
     date: Date | null;
     time: string | null;
     notes: string;
+    availableSlots: any[];
 }
 
 const STEPS = [
@@ -55,6 +56,7 @@ export default function BookAppointmentPage() {
     const [loading, setLoading] = useState({
         branches: true,
         tailors: false,
+        availability: false,
         submit: false
     });
     const [branches, setBranches] = useState<Branch[]>([]);
@@ -67,7 +69,8 @@ export default function BookAppointmentPage() {
         tailor: null,
         date: null,
         time: null,
-        notes: ''
+        notes: '',
+        availableSlots: []
     });
 
     useEffect(() => {
@@ -85,6 +88,12 @@ export default function BookAppointmentPage() {
             fetchTailors(state.branch.id);
         }
     }, [state.branch]);
+
+    useEffect(() => {
+        if (state.tailor && state.date && state.branch) {
+            fetchAvailability();
+        }
+    }, [state.tailor, state.date, state.branch]);
 
     const fetchBranches = async () => {
         try {
@@ -118,6 +127,32 @@ export default function BookAppointmentPage() {
             console.error('Failed to fetch tailors', error);
         } finally {
             setLoading(prev => ({ ...prev, tailors: false }));
+        }
+    };
+
+    const fetchAvailability = async () => {
+        if (!state.tailor || !state.date || !state.branch) return;
+
+        setLoading(prev => ({ ...prev, availability: true }));
+        try {
+            // Format date as ISO string (YYYY-MM-DD)
+            const dateStr = state.date.toISOString().split('T')[0];
+
+            const response = await api.get('/api/appointments/availability/slots', {
+                params: {
+                    tailor_id: state.tailor.id,
+                    branch_id: state.branch.id,
+                    date: dateStr
+                }
+            });
+
+            setState(prev => ({ ...prev, availableSlots: response.data.available_slots }));
+        } catch (error) {
+            console.error('Failed to fetch availability', error);
+            // Fallback to empty slots or handle error
+            setState(prev => ({ ...prev, availableSlots: [] }));
+        } finally {
+            setLoading(prev => ({ ...prev, availability: false }));
         }
     };
 
@@ -327,11 +362,18 @@ export default function BookAppointmentPage() {
                         <p className="text-gray-500 text-sm">Please select a date first</p>
                     </div>
                 ) : (
-                    <TimeSlotSelector
-                        tailorId={state.tailor!.id}
-                        selectedTime={state.time}
-                        onTimeSelect={(time) => setState(prev => ({ ...prev, time }))}
-                    />
+                    loading.availability ? (
+                        <div className="flex justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    ) : (
+                        <TimeSlotSelector
+                            tailorId={state.tailor!.id}
+                            selectedTime={state.time}
+                            onTimeSelect={(time) => setState(prev => ({ ...prev, time }))}
+                            availableSlots={state.availableSlots}
+                        />
+                    )
                 )}
             </div>
         </div>
