@@ -19,6 +19,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { SidebarNav } from '@/components/SidebarNav';
 import { tailorNavItems } from '@/lib/navigation';
+import { NotificationBell } from '@/components/NotificationBell';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 
 export default function TailorLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -26,6 +28,7 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
 
     useEffect(() => {
         // Check authentication and role
@@ -159,6 +162,13 @@ export default function TailorLayout({ children }: { children: React.ReactNode }
                     </button>
 
                     <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <NotificationBell onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)} />
+                            <NotificationDropdown
+                                isOpen={notificationDropdownOpen}
+                                onClose={() => setNotificationDropdownOpen(false)}
+                            />
+                        </div>
                         <div className="hidden sm:block text-right">
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
