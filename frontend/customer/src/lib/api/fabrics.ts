@@ -101,7 +101,7 @@ export async function getFabricPatterns(): Promise<string[]> {
  */
 export async function createFabric(data: Partial<Fabric>): Promise<Fabric> {
     const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_BASE_URL}/api/fabrics/`, data, {
+    const response = await axios.post(`${API_BASE_URL}/api/fabrics`, data, {
         headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
