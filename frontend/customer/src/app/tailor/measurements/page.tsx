@@ -242,7 +242,7 @@ export default function TailorMeasurementsPage() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <button
-                                                        onClick={() => router.push(`/measurements/${measurement.id}`)}
+                                                        onClick={() => router.push(`/measurements/edit?id=${measurement.id}`)}
                                                         className="text-purple-600 hover:text-purple-900 mr-4"
                                                     >
                                                         View Details
